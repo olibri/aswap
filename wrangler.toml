@@ -1,5 +1,0 @@
-name = "aswap-landing"
-compatibility_date = "2025-03-29"
-
-[site]
-bucket = "./dist"
