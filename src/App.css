@@ -1,74 +1,87 @@
-@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
 
-.App {
-  text-align: center;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  background: radial-gradient(circle at center, #F3EF52, #27292F);
-  background-size: 200% 200%;
-  animation: gradientLoop 6s linear infinite;
-  color: #fff;
+
+body {
   font-family: Roboto, "Helvetica Neue", sans-serif;
-}
-
-@keyframes gradientLoop {
-  0% {
-    background-position: 0% 50%;
-  }
-  25% {
-    background-position: 50% 100%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  75% {
-    background-position: 50% 0%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
-}
-
-.App-header {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.title {
-  font-size: 3rem;
-  font-weight: 700;
   margin: 0;
+  padding: 0;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-.subtitle {
-  font-size: 1.5rem;
-  opacity: 0.9;
+body.light .primary {
+  color: #27292F;
 }
 
-.headline {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-}
-
-.title {
-  font-size: 4rem;
-  margin: 0;
-}
-
-.tagline {
-  font-size: 2rem;
-  opacity: 0.9;
-}
-
-.powered {
-  font-size: 1.2rem;
+body.dark .primary {
   color: #F3EF52;
-  letter-spacing: 2px;
 }
 
+body.dark {
+  background-color: #27292F;
+  color: #ffffff;
+}
+
+/* Світла тема */
+body.light {
+  background-color: #f9f9f9;
+  color: #1e1e1e;
+}
+
+/* Заголовки й текст автоматично успадковують колір body */
+h1, h2, h3, h4, h5, h6, p, a, span, div {
+  color: inherit;
+}
+
+/* Перезаписати кольори для хедера в світлій темі */
+body.light .header {
+  background-color: #ffffff;
+  border-bottom: 1px solid #ddd;
+}
+
+body.light .header .nav a {
+  color: #333;
+}
+
+body.light .header .nav a:hover {
+  color: #F3EF52;
+}
+
+body.light .connect-wallet {
+  background-color: #27292F;
+  color: #F3EF52;
+}
+
+body.light .theme-toggle {
+  color: #27292F;
+}
+
+/* P2P-компонент у світлій темі */
+body.light .p2p-market {
+  background-color: #eeeeee;
+  color: #222222;
+}
+
+body.light .p2p-order {
+  background-color: #ffffff;
+  color: #1e1e1e;
+}
+
+body.light .p2p-order .type {
+  color: #666;
+}
+
+body.light .p2p-order .user {
+  color: #555;
+}
+
+body.light .filter-buttons button {
+  background-color: #ffffff;
+  color: #333;
+  border-color: #ccc;
+}
+
+body.light .filter-buttons button.active {
+  background-color: #F3EF52;
+  color: #27292F;
+  font-weight: 700;
+  border-color: #F3EF52;
+}
