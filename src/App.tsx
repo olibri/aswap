@@ -1,9 +1,10 @@
-
 import "./App.css";
 import { Routes, Route } from 'react-router-dom'
 import P2PMarket from "./components/p2p/P2PMarket";
 import Header from "./components/header/header";
 import { useEffect, useState } from 'react'
+import '@solana/wallet-adapter-react-ui/styles.css';
+import { WalletConnectionProvider } from "./components/wallet/wallet-connection-provider";
 
 function App() {
 
@@ -27,6 +28,7 @@ function App() {
 
 
   return (
+    <WalletConnectionProvider>
     <div className="App">
       <Header onToggleTheme={toggleTheme} currentTheme={theme} />
 
@@ -35,6 +37,7 @@ function App() {
       </Routes>
     
     </div>
+    </WalletConnectionProvider>
   );
 }
 

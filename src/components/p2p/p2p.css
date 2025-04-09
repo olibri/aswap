@@ -148,8 +148,6 @@ body {
   }
 
 
-
-
   .p2p-exchange-row {
     display: flex;
     justify-content: space-between;
@@ -159,8 +157,14 @@ body {
     border-radius: 12px;
     margin-bottom: 12px;
     border-left: 6px solid #F3EF52;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
   }
-  
+  .p2p-exchange-row:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    background-color: #383a42;
+  }
+
   .username {
     font-weight: bold;
     color: #F3EF52;

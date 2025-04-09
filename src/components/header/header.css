@@ -71,3 +71,23 @@
   .connect-wallet:hover {
     background-color: #e0dc48;
   }
+
+
+  .wallet-adapter-button {
+    background-color: #F3EF52 !important;
+    color: #27292F !important;
+    /* font-weight: bold !important; */
+    border: none !important;
+    border-radius: 8px !important;
+    /* padding: 8px 16px !important; */
+    cursor: pointer !important;
+    transition: background-color 0.2s ease !important;
+    font-family: Roboto, "Helvetica Neue", sans-serif !important;
+  }
+  
+
+  .wallet-adapter-button:hover {
+    background-color: #e0dc48   !important;
+  }
+
+

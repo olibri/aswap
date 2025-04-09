@@ -1,5 +1,6 @@
 import React from 'react'
 import './header.css'
+import { WalletMultiButton } from '@solana/wallet-adapter-react-ui'
 
 type Props = {
   onToggleTheme: () => void
@@ -19,15 +20,14 @@ const Header: React.FC<Props> = ({ onToggleTheme, currentTheme }) => {
       </nav>
 
       <div className="right">
-        <button
-          className="theme-toggle"
-          title="Toggle theme"
-          onClick={onToggleTheme}
-        >
-          {currentTheme === 'dark' ? '☀️' : '🌙'}
+        <button className="theme-toggle" title="Toggle theme" onClick={onToggleTheme}>
+            {currentTheme === 'dark' ? '☀️' : '🌙'}
         </button>
-        <button className="connect-wallet">Connect Wallet</button>
-      </div>
+
+        {/* <div className="custom-wallet-button"> */}
+            <WalletMultiButton />
+        {/* </div> */}
+        </div>
     </header>
   )
 }
