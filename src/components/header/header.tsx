@@ -12,7 +12,7 @@ const Header: React.FC<Props> = ({ onToggleTheme, currentTheme }) => {
       <div className="logo primary">🪙 P2P DEX</div>
 
       <nav className="nav">
-        <a href="#">Market</a>
+        <a href="/market-p2p-orders">Market</a>
         <a href="#">My Orders</a>
         <a href="#">Stats</a>
         <a href="#">Docs</a>
