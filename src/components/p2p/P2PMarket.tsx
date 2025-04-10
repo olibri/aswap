@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import './p2p.css'
+import { useNavigate } from 'react-router-dom'
 
 type Order = {
   id: string
@@ -22,6 +23,7 @@ const renderStars = (count: number) => '★'.repeat(count) + '☆'.repeat(5 - co
 
 const P2PMarket: React.FC = () => {
   const [filter, setFilter] = useState<'all' | 'buy' | 'sell'>('all')
+  const navigate = useNavigate();
 
   const filteredOrders =
     filter === 'all' ? fakeOrders : fakeOrders.filter((o) => o.type === filter)
@@ -52,13 +54,17 @@ const P2PMarket: React.FC = () => {
           </div>
           <div className="limit-col">
             <div>From <b>{order.amount}</b> USDC</div>
-            <div>To <b>{order.amount * 1000}</b> USDC</div>
+            <div>To <b>{order.amount * 1000}</b> USD</div>
           </div>
           <div className="rate-col">
             <b>{order.price}</b> USDC = <b>1</b> USD
           </div>
           <div className="action-col">
-            <button className="exchange-btn">Change</button>
+          <button
+              className="exchange-btn"
+              onClick={() => navigate(`/swap/${order.id}`)}>
+              Swap
+            </button>
           </div>
         </div>
       ))}

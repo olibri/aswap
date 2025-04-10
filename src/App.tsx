@@ -5,6 +5,7 @@ import Header from "./components/header/header";
 import { useEffect, useState } from 'react'
 import '@solana/wallet-adapter-react-ui/styles.css';
 import { WalletConnectionProvider } from "./components/wallet/wallet-connection-provider";
+import SwapPage from "./components/p2p/swap/SwapPage";
 
 function App() {
 
@@ -34,6 +35,7 @@ function App() {
 
       <Routes>
         <Route path="/market-p2p-orders" element={<P2PMarket />} />
+        <Route path="/swap/:id" element={<SwapPage />} />
       </Routes>
     
     </div>
