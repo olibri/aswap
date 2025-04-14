@@ -32,7 +32,12 @@ const P2PMarket: React.FC = () => {
     <div className="p2p-market">
       <div className="market-header">
         <h2 className="primary">🧾 P2P Market</h2>
-        <button className="create-order-button">+ Create Order</button>
+        <button
+          className="create-order-button"
+          onClick={() => navigate('/create-order')}>
+            + Create Order
+        </button>
+
       </div>
 
       <div className="filter-buttons">

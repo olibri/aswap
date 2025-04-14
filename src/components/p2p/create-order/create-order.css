@@ -1,0 +1,129 @@
+.create-order-page {
+    max-width: 600px;
+    margin: 40px auto;
+    background-color: #1f1f23;
+    border-radius: 20px;
+    padding: 32px;
+    box-shadow: 0 0 14px rgba(0, 0, 0, 0.4);
+    color: #fff;
+  }
+  
+  .order-form {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    margin-top: 24px; 
+  }
+  
+  .order-form label {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    font-weight: bold;
+    color: #F3EF52;
+    font-size: 16px;
+  }
+  
+  .order-form input{
+    padding: 12px 14px;
+    border-radius: 12px;
+    background-color: #2e3038;
+    border: 1px solid #444;
+    color: #fff;
+    font-size: 15px;
+    outline: none;
+    transition: border 0.2s ease;
+  }
+  
+  .order-form input:focus{
+    border-color: #F3EF52;
+  }
+  
+  .submit-order-btn {
+    background-color: #F3EF52;
+    color: #27292F;
+    font-weight: bold;
+    border: none;
+    padding: 14px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.2s ease;
+  }
+  
+  .submit-order-btn:hover {
+    background-color: #e0dc48;
+  }
+
+
+  .custom-select-wrapper {
+    position: relative;
+    margin-top: 8px;
+  }
+  
+  .dropdown-button {
+    padding: 12px 14px;
+    border-radius: 12px;
+    background-color: #2e3038;
+    border: 1px solid #444;
+    color: #fff;
+    font-size: 15px;
+    width: 100%;
+    text-align: left;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    transition: border 0.2s ease;
+  }
+  
+  .dropdown-button:hover {
+    border-color: #F3EF52;
+  }
+  
+  .dropdown-options {
+    position: absolute;
+    top: 110%;
+    left: 0;
+    z-index: 10;
+    background-color: #2e3038;
+    border: 1px solid #444;
+    border-radius: 12px;
+    padding: 4px 0;
+    margin-top: 4px;
+    width: 100%;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+  }
+  
+  .dropdown-option {
+    padding: 10px 16px;
+    font-size: 15px;
+    color: #fff;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    border-radius: 12px;
+
+    overflow: hidden; 
+  }
+  
+  .dropdown-option.active,
+  .dropdown-option:hover {
+    border-radius: 12px;
+    background-color: #F3EF52;
+    color: #27292F;
+  }
+  
+  .chevron {
+    margin-left: auto;
+    font-size: 14px;
+    color: #aaa;
+    display: flex;
+    align-items: center;
+  }
+/*   
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+ */

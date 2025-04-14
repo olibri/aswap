@@ -4,13 +4,20 @@ import P2PMarket from "./components/p2p/P2PMarket";
 import Header from "./components/header/header";
 import { useEffect, useState } from 'react'
 import '@solana/wallet-adapter-react-ui/styles.css';
-import { WalletConnectionProvider } from "./components/wallet/wallet-connection-provider";
 import SwapPage from "./components/p2p/swap/SwapPage";
+import CreateOrderPage from "./components/p2p/create-order/CreateOrderPage";
+import { PhantomWalletAdapter, SolflareWalletAdapter } from '@solana/wallet-adapter-wallets';
+import { ConnectionProvider, WalletProvider } from "@solana/wallet-adapter-react";
+import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
+
 
 function App() {
+  console.log('Buffer?', typeof Buffer, Buffer?.from?.name);
 
   const [theme, setTheme] = useState<'light' | 'dark'>('dark')
 
+  const endpoint = 'https://api.devnet.solana.com';
+  const wallets = [new PhantomWalletAdapter(), new SolflareWalletAdapter()];
   useEffect(() => {
     const saved = localStorage.getItem('theme')
     if (saved === 'light' || saved === 'dark') {
@@ -29,17 +36,20 @@ function App() {
 
 
   return (
-    <WalletConnectionProvider>
-    <div className="App">
-      <Header onToggleTheme={toggleTheme} currentTheme={theme} />
-
-      <Routes>
-        <Route path="/market-p2p-orders" element={<P2PMarket />} />
-        <Route path="/swap/:id" element={<SwapPage />} />
-      </Routes>
-    
-    </div>
-    </WalletConnectionProvider>
+    <ConnectionProvider endpoint={endpoint}>
+      <WalletProvider  wallets={wallets} autoConnect>
+        <WalletModalProvider>
+          <div className="App">
+            <Header onToggleTheme={toggleTheme} currentTheme={theme} />
+            <Routes>
+              <Route path="/market-p2p-orders" element={<P2PMarket />} />
+              <Route path="/swap/:id" element={<SwapPage />} />
+              <Route path="/create-order" element={<CreateOrderPage />} />
+            </Routes>
+          </div>
+        </WalletModalProvider>
+      </WalletProvider >
+    </ConnectionProvider>
   );
 }
 
