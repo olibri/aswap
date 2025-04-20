@@ -26,5 +26,10 @@ jobs:
 
     - name: Upload to server
       run: |
+        rsync -avz ./Dockerfile \
+          p2p_user@65.109.86.205:/var/www/p2p_react/
+          
         rsync -avz --delete ./dist/ p2p_user@65.109.86.205:/var/www/p2p_react/dist
         ssh p2p_user@65.109.86.205 "sudo systemctl restart p2p_react.service"
+
+
