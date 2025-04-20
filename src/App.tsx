@@ -9,6 +9,7 @@ import CreateOrderPage from "./components/p2p/create-order/CreateOrderPage";
 import { PhantomWalletAdapter, SolflareWalletAdapter } from '@solana/wallet-adapter-wallets';
 import { ConnectionProvider, WalletProvider } from "@solana/wallet-adapter-react";
 import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
+import SwapChart from "./components/main-page/swap-chart";
 
 
 function App() {
@@ -42,6 +43,7 @@ function App() {
           <div className="App">
             <Header onToggleTheme={toggleTheme} currentTheme={theme} />
             <Routes>
+              <Route path="/" element={<SwapChart />} />
               <Route path="/market-p2p-orders" element={<P2PMarket />} />
               <Route path="/swap/:id" element={<SwapPage />} />
               <Route path="/create-order" element={<CreateOrderPage />} />

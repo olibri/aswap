@@ -10,8 +10,10 @@ type Props = {
 const Header: React.FC<Props> = ({ onToggleTheme, currentTheme }) => {
   return (
     <header className="header">
-      <div className="logo primary">🪙 P2P DEX</div>
-
+      <div className="logo primary">
+        <img src="/2.svg" alt="P2P DEX Logo" className="logo-img" />
+        P2P DEX
+      </div>
       <nav className="nav">
         <a href="/market-p2p-orders">Market</a>
         <a href="#">My Orders</a>

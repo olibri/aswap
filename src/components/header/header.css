@@ -8,6 +8,13 @@
     font-family: Roboto, "Helvetica Neue", sans-serif;
   }
 
+  .logo-img {
+    width: 32px;
+    height: 32px;
+    margin-right: 8px;
+    vertical-align: middle;
+  }
+  
   .header .logo {
     color: #F3EF52;
     font-weight: bold;
