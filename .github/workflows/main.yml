@@ -19,17 +19,21 @@ jobs:
         chmod 600 ~/.ssh/id_ed25519
         ssh-keyscan -H 65.109.86.205 >> ~/.ssh/known_hosts
 
-    - name: Build project
+    - name: Build Docker image
       run: |
-        npm ci
-        npm run build
+        docker build -t p2p_react .
 
-    - name: Upload to server
+    - name: Save Docker image to archive
       run: |
-        rsync -avz ./Dockerfile \
-          p2p_user@65.109.86.205:/var/www/p2p_react/
-          
-        rsync -avz --delete ./dist/ p2p_user@65.109.86.205:/var/www/p2p_react/dist
-        ssh p2p_user@65.109.86.205 "sudo systemctl restart p2p_react.service"
+        docker save p2p_react | gzip > p2p_react.tar.gz
 
+    - name: Upload Docker image to server
+      run: |
+        rsync -avz p2p_react.tar.gz p2p_user@65.109.86.205:/opt/deploy/
 
+    - name: Load Docker image and restart service
+      run: |
+        ssh p2p_user@65.109.86.205 << 'EOF'
+          docker load < /opt/deploy/p2p_react.tar.gz
+          sudo systemctl restart p2p_react.service
+        EOF
