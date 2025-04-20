@@ -1,0 +1,30 @@
+name: Deploy Frontend to Server
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup SSH
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+        chmod 600 ~/.ssh/id_ed25519
+        ssh-keyscan -H 65.109.86.205 >> ~/.ssh/known_hosts
+
+    - name: Build project
+      run: |
+        npm ci
+        npm run build
+
+    - name: Upload to server
+      run: |
+        rsync -avz --delete ./dist/ p2p_user@65.109.86.205:/var/www/p2p_react/dist
+        ssh p2p_user@65.109.86.205 "sudo systemctl restart p2p_react.service"
