@@ -1,121 +1,116 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import './create-order.css'
-import { Listbox, ListboxButton, ListboxOption, ListboxOptions } from '@headlessui/react'
 import { useEscrowProgram } from '../../../hook/useEscrowProgram'
-import { pdaEscrowOffer, pdaVaultAuthority, USDC_MINT } from '../../../solana/constants'
+import { pdaEscrowOffer, pdaVaultAuthority } from '../../../solana/constants'
 import { BN } from '@coral-xyz/anchor'
 import { createAssociatedTokenAccountInstruction, getAssociatedTokenAddress, TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import { SystemProgram, Transaction } from '@solana/web3.js'
+import { PublicKey, SystemProgram, Transaction } from '@solana/web3.js'
+import { Listbox, ListboxButton, ListboxOption, ListboxOptions } from '@headlessui/react'
 
 
-const orderTypes = [
-  { name: 'Buy', value: 'buy' },
-  { name: 'Sell', value: 'sell' },
-] as const
 
-type OrderType = typeof orderTypes[number]['value']
-
-const currencies = [
-    { name: 'USDC', value: 'usdc' },
-    { name: 'SOL', value: 'sol' },
-    // { name: 'BTC', value: 'btc' },
-  ] as const
+const TOKENS = [
+  {
+    name: 'USDC',
+    value: 'usdc',
+    mint: new PublicKey('Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr'),
+    decimals: 6,
+  },
+  {
+    name: 'SOL',
+    value: 'sol',
+    mint: new PublicKey('So11111111111111111111111111111111111111112'),
+    decimals: 9,
+  },
+] as const;
   
-type Currency = typeof currencies[number]['value']
-  
+
+const FIAT = [
+  { name: 'USD', value: 'USD' },
+  { name: 'EUR', value: 'EUR' },
+  { name: 'UAH', value: 'UAH' },
+] as const;
+
+type TokenValue = typeof TOKENS[number]['value'];
+type FiatValue = typeof FIAT[number]['value'];
+type OrderType = 'buy' | 'sell';
+
 
 const CreateOrderPage: React.FC = () => {
-  const [type, setType] = useState<OrderType>('buy')
-  const [amount, setAmount] = useState<string>('')
-  const [price, setPrice] = useState<string>('')
-  const [currency, setCurrency] = useState<Currency>('usdc')
+
+  const [type, setType] = useState<OrderType>('buy');
+  const [token, setToken] = useState<TokenValue>('usdc');
+  const [fiat, setFiat]   = useState<FiatValue>('USD');
+  const [amount, setAmount] = useState('');
+  const [price,  setPrice]  = useState('');
 
   
   const navigate = useNavigate()
-  
   const program = useEscrowProgram();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     if (!program) {
-        alert('Program is not ready (wallet не підʼєднаний?)');
+        alert('Program is not ready');
         return;
     }
 
-    
-    const amountNumber = Number(amount)
-    const priceNumber = Number(price)
-  
-    if (
-      isNaN(amountNumber) ||
-      isNaN(priceNumber) ||
-      amountNumber <= 0 ||
-      priceNumber <= 0
-    ) {
-      alert('Amount and Price must be valid positive numbers')
-      return
+    const tok = TOKENS.find(t => t.value === token)!;
+    const fiatCode = fiat;
+    const amountF = parseFloat(amount);
+    const priceF  = parseFloat(price);
+
+    if (!amountF || !priceF || amountF <= 0 || priceF <= 0) {
+      return alert('Amount та Price мають бути додатними числами');
     }
   
+    const amountBn = new BN(Math.round(amountF * 10 ** tok.decimals));
+    const priceBn  = new BN(Math.round(priceF  * 100));
+
     const wallet = program.provider.publicKey!;
-    const dealId = Date.now(); 
-    const dealIdBn = new BN(dealId);
-    const amountBn = new BN(amountNumber * 1_000_000);
+    const dealIdBn = new BN(Date.now());
 
     const [escrowPda] = pdaEscrowOffer(wallet, dealIdBn);
     const [vaultAuthPda] = pdaVaultAuthority(escrowPda);
 
-    const sellerTokenAccount = await getAssociatedTokenAddress(
-        USDC_MINT,
-        wallet
-      );
+    const sellerTokenAccount = await getAssociatedTokenAddress(tok.mint, wallet);
+    const vaultTokenAccount  = await getAssociatedTokenAddress(tok.mint, vaultAuthPda, true);
 
-    const vaultTokenAccount = await getAssociatedTokenAddress(
-        USDC_MINT,
-        vaultAuthPda,
-        true 
-      );
-    
     const tx = new Transaction();
-
     const vaultInfo = await program.provider.connection.getAccountInfo(
         vaultTokenAccount
     );
+
     if (!vaultInfo) {
-        tx.add(
-          createAssociatedTokenAccountInstruction(
-            wallet,
-            vaultTokenAccount,
-            vaultAuthPda,
-            USDC_MINT
-          )
-        );
+      tx.add(
+              createAssociatedTokenAccountInstruction(
+                wallet,
+                vaultTokenAccount,
+                vaultAuthPda,
+                tok.mint
+              )
+            );
       }
 
-    const ix = await program.methods
-      .initializeOffer(amountBn, dealIdBn)
+      const ix = await program.methods
+      .initializeOffer(amountBn, tok.mint, fiatCode, priceBn, dealIdBn)
       .accounts({
         escrowAccount: escrowPda,
         sellerTokenAccount,
-        vaultAccount: vaultTokenAccount,
-        seller: wallet,
-        tokenProgram: TOKEN_PROGRAM_ID,
-        systemProgram: SystemProgram.programId,
+        vaultAccount:   vaultTokenAccount,
+        seller:         wallet,
+        tokenProgram:   TOKEN_PROGRAM_ID,
+        systemProgram:  SystemProgram.programId,
       })
       .instruction();
-  
-    tx.add(ix);
 
-    if (!program) {
-        alert('Program не готовий');
-        return;
-      }
+    tx.add(ix);
     const sig = await program.provider.sendAndConfirm!(tx, []);
-    console.log('🎉  initialize_offer tx', sig);
-    
-    console.log({ type, amount: amountNumber, price: priceNumber, currency })
-    navigate('/')
+    console.log('🎉 initialize_offer tx:', sig);
+
+    navigate('/');
   }
   
   return (
@@ -123,94 +118,50 @@ const CreateOrderPage: React.FC = () => {
       <h2 className="primary">📝 Create Order</h2>
       <form onSubmit={handleSubmit} className="order-form">
 
-        <div className="form-group">
-            <span className="label-text">Type:</span>
-            <Listbox value={type} onChange={setType}>
-            <div className="custom-select-wrapper">
-                <ListboxButton className="dropdown-button">
-                {orderTypes.find(o => o.value === type)?.name}
-                <svg className="chevron" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24">
-                    <path fill="currentColor" d="M7 10l5 5 5-5H7z" />
-                </svg>
-                </ListboxButton>
+        {/* Type (buy/sell) */}
+        <Dropdown
+          label="Type"
+          value={type}
+          options={[{ name: 'Buy', value: 'buy' }, { name: 'Sell', value: 'sell' }]}
+          onChange={setType}
+        />
 
-                <ListboxOptions className="dropdown-options">
-                {orderTypes.map((opt) => (
-                    <ListboxOption
-                    key={opt.value}
-                    value={opt.value}
-                    className={({ active }) =>
-                        `dropdown-option ${active ? 'active' : ''}`
-                    }
-                    >
-                    {opt.name}
-                    </ListboxOption>
-                ))}
-                </ListboxOptions>
-            </div>
-          </Listbox>
-        </div>
+        {/* Token */}
+        <Dropdown
+          label="Token"
+          value={token}
+          options={TOKENS.map(t => ({ name: t.name, value: t.value }))}
+          onChange={setToken}
+        />
 
-        <div className="form-group">
-            <span className="label-text">Currency:</span>
-            <Listbox value={currency} onChange={setCurrency}>
-                <div className="custom-select-wrapper">
-                <ListboxButton className="dropdown-button">
-                    {currencies.find(c => c.value === currency)?.name}
-                    <svg className="chevron" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24">
-                    <path fill="currentColor" d="M7 10l5 5 5-5H7z" />
-                    </svg>
-                </ListboxButton>
-
-                <ListboxOptions className="dropdown-options">
-                    {currencies.map((opt) => (
-                    <ListboxOption
-                        key={opt.value}
-                        value={opt.value}
-                        className={({ active }) =>
-                        `dropdown-option ${active ? 'active' : ''}`
-                        }
-                    >
-                        {opt.name}
-                    </ListboxOption>
-                    ))}
-                </ListboxOptions>
-                </div>
-            </Listbox>
-        </div>     
-
+        {/* Fiat */}
+        <Dropdown
+          label="Fiat"
+          value={fiat}
+          options={FIAT.map(f => ({ name: f.name, value: f.value }))}
+          onChange={setFiat}
+        />
 
         <label>
-            Amount ({currency.toUpperCase()}):
-            <input
-                type="text"
-                value={amount}
-                onChange={(e) => {
-                const val = e.target.value
-                if (/^\d*\.?\d*$/.test(val)) {
-                    setAmount(val)
-                }
-                }}
-                inputMode="decimal"
-                placeholder="0.00"
-            />
+          Amount ({TOKENS.find(t => t.value === token)?.name}):
+          <input
+            type="text"
+            value={amount}
+            onChange={e => /^\d*\.?\d*$/.test(e.target.value) && setAmount(e.target.value)}
+            placeholder="0.00"
+            inputMode="decimal"
+          />
         </label>
 
         <label>
-            Price:
-            <input
-                type="text"
-                value={price}
-                onChange={(e) => {
-                const val = e.target.value
-                if (/^\d*\.?\d*$/.test(val)) {
-                    setPrice(val)
-                }
-                }}
-                inputMode="decimal"
-                placeholder="0.00"
-
-            />
+          Price ({fiat}):
+          <input
+            type="text"
+            value={price}
+            onChange={e => /^\d*\.?\d*$/.test(e.target.value) && setPrice(e.target.value)}
+            placeholder="0.00"
+            inputMode="decimal"
+          />
         </label>
 
         <button type="submit" className="submit-order-btn">
@@ -218,7 +169,40 @@ const CreateOrderPage: React.FC = () => {
         </button>
       </form>
     </div>
-  )
+  );
 }
 
+interface DDProps<T extends string> {
+  label: string;
+  value: T;
+  options: { name: string; value: T }[];
+  onChange: (v: T) => void;
+}
+
+function Dropdown<T extends string>({ label, value, options, onChange }: DDProps<T>) {
+  return (
+    <div className="form-group">
+      <span className="label-text">{label}:</span>
+      <Listbox value={value} onChange={onChange}>
+        <div className="custom-select-wrapper">
+          <ListboxButton className="dropdown-button">
+            {options.find(o => o.value === value)?.name}
+            <svg className="chevron" xmlns="http://www.w3.org/2000/svg" width="20" height="20"><path fill="currentColor" d="M7 10l5 5 5-5H7z"/></svg>
+          </ListboxButton>
+          <ListboxOptions className="dropdown-options">
+            {options.map(o => (
+              <ListboxOption
+                key={o.value}
+                value={o.value}
+                className={({ active }) => `dropdown-option ${active ? 'active' : ''}`}
+              >
+                {o.name}
+              </ListboxOption>
+            ))}
+          </ListboxOptions>
+        </div>
+      </Listbox>
+    </div>
+  );
+}
 export default CreateOrderPage

@@ -1,575 +1,616 @@
 {
-    "address": "9LEGQe2obd9UizPkci9zHwrQbF7js5J4p92wn5b83ALN",
-    "metadata": {
-      "name": "ddd",
-      "version": "0.1.0",
-      "spec": "0.1.0",
-      "description": "Created with Anchor"
-    },
-    "instructions": [
-      {
-        "name": "buyer_sign",
-        "discriminator": [
-          151,
-          79,
-          172,
-          161,
-          11,
-          175,
-          136,
-          198
-        ],
-        "accounts": [
-          {
-            "name": "escrow_account",
-            "writable": true,
-            "pda": {
-              "seeds": [
-                {
-                  "kind": "const",
-                  "value": [
-                    101,
-                    115,
-                    99,
-                    114,
-                    111,
-                    119
-                  ]
-                },
-                {
-                  "kind": "account",
-                  "path": "escrow_account.seller",
-                  "account": "EscrowAccount"
-                },
-                {
-                  "kind": "account",
-                  "path": "escrow_account.buyer",
-                  "account": "EscrowAccount"
-                },
-                {
-                  "kind": "arg",
-                  "path": "deal_id"
-                }
-              ]
-            }
-          },
-          {
-            "name": "vault_account",
-            "docs": [
-              "CHECKED: KEEPER"
-            ],
-            "writable": true,
-            "relations": [
-              "escrow_account"
+  "address": "9LEGQe2obd9UizPkci9zHwrQbF7js5J4p92wn5b83ALN",
+  "metadata": {
+    "name": "ddd",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Created with Anchor"
+  },
+  "instructions": [
+    {
+      "name": "buyer_sign",
+      "discriminator": [
+        151,
+        79,
+        172,
+        161,
+        11,
+        175,
+        136,
+        198
+      ],
+      "accounts": [
+        {
+          "name": "escrow_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "escrow_account.seller",
+                "account": "EscrowAccount"
+              },
+              {
+                "kind": "account",
+                "path": "escrow_account.buyer",
+                "account": "EscrowAccount"
+              },
+              {
+                "kind": "arg",
+                "path": "deal_id"
+              }
             ]
-          },
-          {
-            "name": "vault_authority",
-            "docs": [
-              "PDA (Vault Authority), яка має право підписувати транзакцію від імені vault_account",
-              "seeds = [\"vault_authority\", escrow_account.key().as_ref()]",
-              "CHECKED: KEEPER"
-            ],
-            "writable": true,
-            "pda": {
-              "seeds": [
-                {
-                  "kind": "const",
-                  "value": [
-                    118,
-                    97,
-                    117,
-                    108,
-                    116,
-                    95,
-                    97,
-                    117,
-                    116,
-                    104,
-                    111,
-                    114,
-                    105,
-                    116,
-                    121
-                  ]
-                },
-                {
-                  "kind": "account",
-                  "path": "escrow_account"
-                }
-              ]
-            }
-          },
-          {
-            "name": "buyer_token_account",
-            "docs": [
-              "CHECKED: KEEPER"
-            ],
-            "writable": true
-          },
-          {
-            "name": "buyer",
-            "docs": [
-              "CHECKED: KEEPER"
-            ],
-            "signer": true
-          },
-          {
-            "name": "token_program",
-            "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
           }
-        ],
-        "args": [
-          {
-            "name": "_deal_id",
-            "type": "u64"
-          }
-        ]
-      },
-      {
-        "name": "claim_offer",
-        "discriminator": [
-          23,
-          96,
-          252,
-          190,
-          218,
-          229,
-          192,
-          246
-        ],
-        "accounts": [
-          {
-            "name": "escrow_account",
-            "docs": [
-              "CHECKED: KEEPER"
-            ],
-            "writable": true,
-            "pda": {
-              "seeds": [
-                {
-                  "kind": "const",
-                  "value": [
-                    101,
-                    115,
-                    99,
-                    114,
-                    111,
-                    119,
-                    95,
-                    111,
-                    102,
-                    102,
-                    101,
-                    114
-                  ]
-                },
-                {
-                  "kind": "account",
-                  "path": "escrow_account.seller",
-                  "account": "EscrowAccount"
-                },
-                {
-                  "kind": "arg",
-                  "path": "deal_id"
-                }
-              ]
-            }
-          },
-          {
-            "name": "buyer",
-            "writable": true,
-            "signer": true
-          }
-        ],
-        "args": [
-          {
-            "name": "_deal_id",
-            "type": "u64"
-          }
-        ]
-      },
-      {
-        "name": "initialize",
-        "discriminator": [
-          175,
-          175,
-          109,
-          31,
-          13,
-          152,
-          155,
-          237
-        ],
-        "accounts": [],
-        "args": []
-      },
-      {
-        "name": "initialize_escrow",
-        "discriminator": [
-          243,
-          160,
-          77,
-          153,
-          11,
-          92,
-          48,
-          209
-        ],
-        "accounts": [
-          {
-            "name": "escrow_account",
-            "writable": true,
-            "pda": {
-              "seeds": [
-                {
-                  "kind": "const",
-                  "value": [
-                    101,
-                    115,
-                    99,
-                    114,
-                    111,
-                    119
-                  ]
-                },
-                {
-                  "kind": "account",
-                  "path": "seller"
-                },
-                {
-                  "kind": "account",
-                  "path": "buyer"
-                },
-                {
-                  "kind": "arg",
-                  "path": "_deal_id"
-                }
-              ]
-            }
-          },
-          {
-            "name": "seller_token_account",
-            "docs": [
-              "CHECKED: KEEPER"
-            ],
-            "writable": true
-          },
-          {
-            "name": "vault_account",
-            "docs": [
-              "CHECKED: KEEPER"
-            ],
-            "writable": true
-          },
-          {
-            "name": "seller",
-            "docs": [
-              "CHECKED: KEEPER"
-            ],
-            "writable": true,
-            "signer": true
-          },
-          {
-            "name": "buyer",
-            "docs": [
-              "CHECKED: KEEPER"
-            ]
-          },
-          {
-            "name": "token_program",
-            "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
-          },
-          {
-            "name": "system_program",
-            "address": "11111111111111111111111111111111"
-          }
-        ],
-        "args": [
-          {
-            "name": "amount",
-            "type": "u64"
-          },
-          {
-            "name": "_deal_id",
-            "type": "u64"
-          }
-        ]
-      },
-      {
-        "name": "initialize_offer",
-        "discriminator": [
-          41,
-          143,
-          90,
-          114,
-          58,
-          124,
-          142,
-          87
-        ],
-        "accounts": [
-          {
-            "name": "escrow_account",
-            "docs": [
-              "CHECKED: KEEPER"
-            ],
-            "writable": true,
-            "pda": {
-              "seeds": [
-                {
-                  "kind": "const",
-                  "value": [
-                    101,
-                    115,
-                    99,
-                    114,
-                    111,
-                    119,
-                    95,
-                    111,
-                    102,
-                    102,
-                    101,
-                    114
-                  ]
-                },
-                {
-                  "kind": "account",
-                  "path": "seller"
-                },
-                {
-                  "kind": "arg",
-                  "path": "_deal_id"
-                }
-              ]
-            }
-          },
-          {
-            "name": "seller_token_account",
-            "docs": [
-              "CHECKED: KEEPER"
-            ],
-            "writable": true
-          },
-          {
-            "name": "vault_account",
-            "docs": [
-              "CHECKED: KEEPER"
-            ],
-            "writable": true
-          },
-          {
-            "name": "seller",
-            "docs": [
-              "CHECKED: KEEPER"
-            ],
-            "writable": true,
-            "signer": true
-          },
-          {
-            "name": "token_program",
-            "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
-          },
-          {
-            "name": "system_program",
-            "address": "11111111111111111111111111111111"
-          }
-        ],
-        "args": [
-          {
-            "name": "amount",
-            "type": "u64"
-          },
-          {
-            "name": "_deal_id",
-            "type": "u64"
-          }
-        ]
-      },
-      {
-        "name": "seller_sign",
-        "discriminator": [
-          235,
-          26,
-          93,
-          194,
-          57,
-          50,
-          194,
-          52
-        ],
-        "accounts": [
-          {
-            "name": "escrow_account",
-            "writable": true,
-            "pda": {
-              "seeds": [
-                {
-                  "kind": "const",
-                  "value": [
-                    101,
-                    115,
-                    99,
-                    114,
-                    111,
-                    119
-                  ]
-                },
-                {
-                  "kind": "account",
-                  "path": "escrow_account.seller",
-                  "account": "EscrowAccount"
-                },
-                {
-                  "kind": "account",
-                  "path": "escrow_account.buyer",
-                  "account": "EscrowAccount"
-                },
-                {
-                  "kind": "arg",
-                  "path": "deal_id"
-                }
-              ]
-            }
-          },
-          {
-            "name": "vault_account",
-            "docs": [
-              "CHECKED: KEEPER"
-            ],
-            "writable": true,
-            "relations": [
-              "escrow_account"
-            ]
-          },
-          {
-            "name": "vault_authority",
-            "docs": [
-              "seeds = [\"vault_authority\", escrow_account.key().as_ref()]",
-              "CHECKED: KEEPER"
-            ],
-            "writable": true,
-            "pda": {
-              "seeds": [
-                {
-                  "kind": "const",
-                  "value": [
-                    118,
-                    97,
-                    117,
-                    108,
-                    116,
-                    95,
-                    97,
-                    117,
-                    116,
-                    104,
-                    111,
-                    114,
-                    105,
-                    116,
-                    121
-                  ]
-                },
-                {
-                  "kind": "account",
-                  "path": "escrow_account"
-                }
-              ]
-            }
-          },
-          {
-            "name": "buyer_token_account",
-            "docs": [
-              "CHECKED: KEEPER"
-            ],
-            "writable": true
-          },
-          {
-            "name": "seller",
-            "docs": [
-              "CHECKED: KEEPER"
-            ],
-            "signer": true
-          },
-          {
-            "name": "token_program",
-            "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
-          }
-        ],
-        "args": [
-          {
-            "name": "_deal_id",
-            "type": "u64"
-          }
-        ]
-      }
-    ],
-    "accounts": [
-      {
-        "name": "EscrowAccount",
-        "discriminator": [
-          36,
-          69,
-          48,
-          18,
-          128,
-          225,
-          125,
-          135
-        ]
-      }
-    ],
-    "errors": [
-      {
-        "code": 6000,
-        "name": "InvalidBuyer",
-        "msg": "Неправильний баєр"
-      },
-      {
-        "code": 6001,
-        "name": "InvalidSeller",
-        "msg": "Неправильний селлер"
-      },
-      {
-        "code": 6002,
-        "name": "AlreadyClaimed",
-        "msg": "Ця пропозиція вже має баєра"
-      }
-    ],
-    "types": [
-      {
-        "name": "EscrowAccount",
-        "type": {
-          "kind": "struct",
-          "fields": [
-            {
-              "name": "seller",
-              "type": "pubkey"
-            },
-            {
-              "name": "buyer",
-              "type": "pubkey"
-            },
-            {
-              "name": "vault_account",
-              "type": "pubkey"
-            },
-            {
-              "name": "amount",
-              "type": "u64"
-            },
-            {
-              "name": "buyer_signed",
-              "type": "bool"
-            },
-            {
-              "name": "seller_signed",
-              "type": "bool"
-            }
+        },
+        {
+          "name": "vault_account",
+          "docs": [
+            "CHECKED: KEEPER"
+          ],
+          "writable": true,
+          "relations": [
+            "escrow_account"
           ]
+        },
+        {
+          "name": "vault_authority",
+          "docs": [
+            "PDA (Vault Authority), яка має право підписувати транзакцію від імені vault_account",
+            "seeds = [\"vault_authority\", escrow_account.key().as_ref()]",
+            "CHECKED: KEEPER"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "escrow_account"
+              }
+            ]
+          }
+        },
+        {
+          "name": "buyer_token_account",
+          "docs": [
+            "CHECKED: KEEPER"
+          ],
+          "writable": true
+        },
+        {
+          "name": "buyer",
+          "docs": [
+            "CHECKED: KEEPER"
+          ],
+          "signer": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         }
+      ],
+      "args": [
+        {
+          "name": "_deal_id",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "claim_offer",
+      "discriminator": [
+        23,
+        96,
+        252,
+        190,
+        218,
+        229,
+        192,
+        246
+      ],
+      "accounts": [
+        {
+          "name": "escrow_account",
+          "docs": [
+            "CHECKED: KEEPER"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119,
+                  95,
+                  111,
+                  102,
+                  102,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "escrow_account.seller",
+                "account": "EscrowAccount"
+              },
+              {
+                "kind": "arg",
+                "path": "deal_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "buyer",
+          "writable": true,
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "_deal_id",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "initialize",
+      "discriminator": [
+        175,
+        175,
+        109,
+        31,
+        13,
+        152,
+        155,
+        237
+      ],
+      "accounts": [],
+      "args": []
+    },
+    {
+      "name": "initialize_escrow",
+      "discriminator": [
+        243,
+        160,
+        77,
+        153,
+        11,
+        92,
+        48,
+        209
+      ],
+      "accounts": [
+        {
+          "name": "escrow_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "seller"
+              },
+              {
+                "kind": "account",
+                "path": "buyer"
+              },
+              {
+                "kind": "arg",
+                "path": "_deal_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "seller_token_account",
+          "docs": [
+            "CHECKED: KEEPER"
+          ],
+          "writable": true
+        },
+        {
+          "name": "vault_account",
+          "docs": [
+            "CHECKED: KEEPER"
+          ],
+          "writable": true
+        },
+        {
+          "name": "seller",
+          "docs": [
+            "CHECKED: KEEPER"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "buyer",
+          "docs": [
+            "CHECKED: KEEPER"
+          ]
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        },
+        {
+          "name": "token_mint",
+          "type": "pubkey"
+        },
+        {
+          "name": "fiat_code",
+          "type": "string"
+        },
+        {
+          "name": "price",
+          "type": "u64"
+        },
+        {
+          "name": "_deal_id",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "initialize_offer",
+      "discriminator": [
+        41,
+        143,
+        90,
+        114,
+        58,
+        124,
+        142,
+        87
+      ],
+      "accounts": [
+        {
+          "name": "escrow_account",
+          "docs": [
+            "CHECKED: KEEPER"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119,
+                  95,
+                  111,
+                  102,
+                  102,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "seller"
+              },
+              {
+                "kind": "arg",
+                "path": "_deal_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "seller_token_account",
+          "docs": [
+            "CHECKED: KEEPER"
+          ],
+          "writable": true
+        },
+        {
+          "name": "vault_account",
+          "docs": [
+            "CHECKED: KEEPER"
+          ],
+          "writable": true
+        },
+        {
+          "name": "seller",
+          "docs": [
+            "CHECKED: KEEPER"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        },
+        {
+          "name": "token_mint",
+          "type": "pubkey"
+        },
+        {
+          "name": "fiat_code",
+          "type": "string"
+        },
+        {
+          "name": "price",
+          "type": "u64"
+        },
+        {
+          "name": "_deal_id",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "seller_sign",
+      "discriminator": [
+        235,
+        26,
+        93,
+        194,
+        57,
+        50,
+        194,
+        52
+      ],
+      "accounts": [
+        {
+          "name": "escrow_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "escrow_account.seller",
+                "account": "EscrowAccount"
+              },
+              {
+                "kind": "account",
+                "path": "escrow_account.buyer",
+                "account": "EscrowAccount"
+              },
+              {
+                "kind": "arg",
+                "path": "deal_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault_account",
+          "docs": [
+            "CHECKED: KEEPER"
+          ],
+          "writable": true,
+          "relations": [
+            "escrow_account"
+          ]
+        },
+        {
+          "name": "vault_authority",
+          "docs": [
+            "seeds = [\"vault_authority\", escrow_account.key().as_ref()]",
+            "CHECKED: KEEPER"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "escrow_account"
+              }
+            ]
+          }
+        },
+        {
+          "name": "buyer_token_account",
+          "docs": [
+            "CHECKED: KEEPER"
+          ],
+          "writable": true
+        },
+        {
+          "name": "seller",
+          "docs": [
+            "CHECKED: KEEPER"
+          ],
+          "signer": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": [
+        {
+          "name": "_deal_id",
+          "type": "u64"
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "EscrowAccount",
+      "discriminator": [
+        36,
+        69,
+        48,
+        18,
+        128,
+        225,
+        125,
+        135
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "InvalidBuyer",
+      "msg": "Неправильний баєр"
+    },
+    {
+      "code": 6001,
+      "name": "InvalidSeller",
+      "msg": "Неправильний селлер"
+    },
+    {
+      "code": 6002,
+      "name": "AlreadyClaimed",
+      "msg": "Ця пропозиція вже має баєра"
+    }
+  ],
+  "types": [
+    {
+      "name": "EscrowAccount",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "seller",
+            "type": "pubkey"
+          },
+          {
+            "name": "buyer",
+            "type": "pubkey"
+          },
+          {
+            "name": "vault_account",
+            "type": "pubkey"
+          },
+          {
+            "name": "token_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "fiat_code",
+            "type": {
+              "array": [
+                "u8",
+                8
+              ]
+            }
+          },
+          {
+            "name": "price",
+            "type": "u64"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "buyer_signed",
+            "type": "bool"
+          },
+          {
+            "name": "seller_signed",
+            "type": "bool"
+          }
+        ]
       }
-    ]
-  }
+    }
+  ]
+}
