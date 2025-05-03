@@ -1,39 +1,31 @@
-name: Deploy Frontend to Server
+name: Deploy Frontend (ssh → build on server)
 
 on:
   push:
     branches: [ master ]
+
+env:
+  HOST: 65.109.86.205
+  USER: p2p_user
+  DEPLOY_SCRIPT: /usr/local/bin/deploy_p2p_front.sh
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
-    - name: Setup SSH
+    - name: Add SSH key
       run: |
-        mkdir -p ~/.ssh
+        install -m 600 -d ~/.ssh
         echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
         chmod 600 ~/.ssh/id_ed25519
-        ssh-keyscan -H 65.109.86.205 >> ~/.ssh/known_hosts
+        ssh-keyscan -H ${{ env.HOST }} >> ~/.ssh/known_hosts
 
-    - name: Build Docker image
-      run: |
-        docker build -t p2p_react .
+    - name: Push latest code & run deploy script remotely
 
-    - name: Save Docker image to archive
       run: |
-        docker save p2p_react | gzip > p2p_react.tar.gz
+        rsync -az --delete --exclude=".git" ./ ${{ env.USER }}@${{ env.HOST }}:/opt/p2p_front/
+        ssh ${{ env.USER }}@${{ env.HOST }} "${{ env.DEPLOY_SCRIPT }}"
 
-    - name: Upload Docker image to server
-      run: |
-        rsync -avz p2p_react.tar.gz p2p_user@65.109.86.205:/opt/deploy/
-
-    - name: Load Docker image and restart service
-      run: |
-        ssh p2p_user@65.109.86.205 << 'EOF'
-          docker load < /opt/deploy/p2p_react.tar.gz
-          sudo systemctl restart p2p_react.service
-        EOF
