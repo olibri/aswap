@@ -98,3 +98,76 @@
   }
 
 
+
+  /* ---------- BURGER ---------- */
+
+.burger {
+  display: none;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 24px;
+  height: 18px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.burger span {
+  display: block;
+  width: 100%;
+  height: 3px;
+  background: #f3ef52;
+  transition: transform 0.25s ease, opacity 0.25s ease;
+}
+
+.burger.open span:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+}
+.burger.open span:nth-child(2) {
+  opacity: 0;
+}
+.burger.open span:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
+}
+
+/* ---------- MOBILE DRAWER ---------- */
+
+.nav.drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 240px;
+  height: 100vh;
+  background: #1f1f23;
+  display: flex;
+  flex-direction: column;
+  padding: 80px 24px 24px;
+  gap: 24px;
+  transform: translateX(100%);
+  transition: transform 0.3s ease;
+  z-index: 999;               /* поверх усього */
+}
+
+.nav.drawer a {
+  font-size: 1.1rem;
+}
+
+.nav.drawer.show {
+  transform: translateX(0);
+}
+
+/* ---------- RESPONSIVE BREAKPOINT ---------- */
+
+@media (max-width: 767px) {
+  /* ховаємо десктоп‑nav і правий блок (всередині drawer) */
+  .nav.desktop,
+  .right {
+    display: none;
+  }
+
+  /* показуємо бургер */
+  .burger {
+    display: flex;
+  }
+}
