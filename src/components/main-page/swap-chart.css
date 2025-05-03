@@ -3,6 +3,8 @@
   padding: 96px 24px 120px;
   text-align: center;
   overflow: hidden;
+  background: #1e1e1e;              /* ← чорний/темний фон */
+  color: #ffffff;                   /* базово білий текст */
 }
 
 .home .hero h1 {
@@ -16,6 +18,7 @@
   margin: 0 auto 2.5rem;
   color: var(--muted, #bbbbbb);
 }
+
 
 .hero-actions {
   display: flex;
@@ -33,36 +36,41 @@
 }
 
 .btn.accent {
-  background: var(--accent);
-  color: #000;
+  background: #F3EF52;
+  color: #27292F;
 }
 
 .btn.ghost {
-  border: 2px solid var(--accent);
-  color: var(--accent);
+  border: 2px solid #F3EF52;
+  color: #F3EF52;
+  background: transparent;
 }
-
-.btn:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+.btn.ghost:hover {
+  background: #F3EF52;
+  color: #27292F;
 }
-
 /* обертовий світловий диск */
 .hero-glow {
   position: absolute;
-  inset: -40%;
+  inset: -50%;
   pointer-events: none;
-  background: radial-gradient(circle at 50% 50%, var(--accent) 0%, transparent 70%);
-  filter: blur(150px);
+  background: radial-gradient(circle at 50% 50%,
+              rgba(243,239,82,0.55) 0%,
+              rgba(243,239,82,0.15) 45%,
+              transparent 70%);
+  filter: blur(120px);
   animation: spin 22s linear infinite;
+  z-index: 0;                       /* найпозаду */
 }
-
 @keyframes spin {
   100% {
     transform: rotate(360deg);
   }
 }
-
+.hero > *:not(.hero-glow) {
+  position: relative;
+  z-index: 1;
+}
 /* ---------- HOW IT WORKS ---------- */
 
 .hiw {

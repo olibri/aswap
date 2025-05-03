@@ -9,6 +9,13 @@ const SwapChart: React.FC = () => {
 
       {/* HERO / DASHBOARD */}
       <section className="hero">
+      <div className="hero-glow" />
+        <h1>P2P DEX made simple</h1>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+        <div className="hero-actions">
+          <a href="/create-order" className="btn accent">Create offer</a>
+          <a href="/market-p2p-orders" className="btn ghost">Browse market</a>
+        </div>
       <div className="floaties">
         <FloatIcon src="/flying/sol.svg"  initialX="10%" initialY="25%" />
         <FloatIcon src="/flying/usdc.svg" initialX="18%" initialY="65%" />
@@ -19,13 +26,7 @@ const SwapChart: React.FC = () => {
 
       </div>
 
-        <div className="hero-glow" />
-        <h1>P2P DEX made simple</h1>
-        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
-        <div className="hero-actions">
-          <a href="/create-order" className="btn accent">Create offer</a>
-          <a href="/market-p2p-orders" className="btn ghost">Browse market</a>
-        </div>
+      
       </section>
 
       {/* HOW IT WORKS */}
