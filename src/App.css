@@ -2,6 +2,7 @@
   --accent: #F3EF52;
   --dark-bg: #1e1e1e; /* як у хедера */
   --light-bg: #ffffff;
+  --accent-dark: #C0B000;
 }
 
 body {
@@ -90,4 +91,9 @@ body.light .filter-buttons button.active {
   border-color: #F3EF52;
 }
 
-
+body.light .hero-glow {
+  background: radial-gradient(circle at 50% 50%,
+              rgba(243,239,82,0.65) 0%, transparent 75%);
+  filter: blur(100px);   /* менший blur */
+  opacity: 0.55;         /* не так засліплює */
+}

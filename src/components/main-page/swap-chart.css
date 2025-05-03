@@ -151,7 +151,28 @@ body.dark {
   --muted: #bbbbbb;
   --card-bg: #252525;
 }
+body.light .btn.accent {
+  background: #F3EF52;    /* залишаємо жовтий */
+  color: #27292F;         /* темний текст */
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
 
+body.light .btn.accent:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+}
+
+/* Ghost‑кнопка: робимо темну рамку, а жовтий лише при hover */
+body.light .btn.ghost {
+  border-color: #27292F;
+  color: #27292F;
+  background: transparent;
+}
+
+body.light .btn.ghost:hover {
+  background: #F3EF52;
+  color: #27292F;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+}
 
 /* ---------- FLOATIES ---------- */
 

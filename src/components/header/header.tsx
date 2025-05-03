@@ -15,10 +15,10 @@ const Header: React.FC<Props> = ({ onToggleTheme, currentTheme }) => {
         P2P DEX
       </div>
       <nav className="nav">
-        <a href="/market-p2p-orders">Market</a>
-        <a href="#">My Orders</a>
-        <a href="#">Stats</a>
-        <a href="#">Docs</a>
+        <a href="/market-p2p-orders">Online</a>
+        <a href="#">Offline</a>
+        <a href="#">Swap</a>
+        <a href="#">My orders</a>
       </nav>
 
       <div className="right">
