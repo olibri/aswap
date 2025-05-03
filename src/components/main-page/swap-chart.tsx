@@ -1,40 +1,24 @@
-// import React, { useEffect } from 'react';
 import './swap-chart.css';
+import FloatIcon from "./floatIcon";
 
-// type ChartPoint = {
-//   date: string;
-//   price: number;
-// };
 
 const SwapChart: React.FC = () => {
-
-  // useEffect(() => {
-  //   (async () => {
-  //     try {
-  //       const res = await fetch(
-  //         'https://api.coingecko.com/api/v3/coins/solana/market_chart?vs_currency=usd&days=90'
-  //       );
-  //       const json = await res.json();
-
-  //       const parsedData: ChartPoint[] = json.prices.map(
-  //         ([timestamp, price]: [number, number]) => ({
-  //           date: new Date(timestamp).toLocaleDateString('uk-UA'),
-  //           price,
-  //         })
-  //       );
-
-  //       setData(parsedData);
-  //     } catch (err) {
-  //       console.error('Failed to fetch chart data:', err);
-  //     }
-  //   })();
-  // }, []);
 
   return (
     <div className="home">
 
       {/* HERO / DASHBOARD */}
       <section className="hero">
+      <div className="floaties">
+        <FloatIcon src="/flying/sol.svg"  initialX="10%" initialY="25%" />
+        <FloatIcon src="/flying/usdc.svg" initialX="18%" initialY="65%" />
+        <FloatIcon src="/flying/usdt.svg" initialX="78%" initialY="30%" />
+        <FloatIcon src="/flying/card.svg" initialX="82%" initialY="70%" size={48} />
+        <FloatIcon src="/flying/solflare.svg" initialX="55%" initialY="22%" size={48} />
+        <FloatIcon src="/flying/phantom.svg" initialX="30%" initialY="40%" size={48} />
+
+      </div>
+
         <div className="hero-glow" />
         <h1>P2P DEX made simple</h1>
         <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>

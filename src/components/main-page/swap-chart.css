@@ -151,3 +151,14 @@ body.dark {
   --muted: #bbbbbb;
   --card-bg: #252525;
 }
+
+
+/* ---------- FLOATIES ---------- */
+
+
+.floaties {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.floaties img { pointer-events: auto; }
