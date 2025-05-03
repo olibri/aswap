@@ -10,6 +10,7 @@ import { PhantomWalletAdapter, SolflareWalletAdapter } from '@solana/wallet-adap
 import { ConnectionProvider, WalletProvider } from "@solana/wallet-adapter-react";
 import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
 import SwapChart from "./components/main-page/swap-chart";
+import Footer from "./components/footer/footer";
 
 
 function App() {
@@ -48,6 +49,7 @@ function App() {
               <Route path="/swap/:id" element={<SwapPage />} />
               <Route path="/create-order" element={<CreateOrderPage />} />
             </Routes>
+            <Footer/>
           </div>
         </WalletModalProvider>
       </WalletProvider >

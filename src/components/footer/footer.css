@@ -1,0 +1,50 @@
+.footer {
+    background: #111;
+    padding: 48px 24px 32px;
+    text-align: center;
+    color: var(--muted, #bbbbbb);
+    transition: background 0.3s ease, color 0.3s ease;
+  }
+  
+  body.light .footer {
+    background: #f1f1f1;
+    color: #666;
+  }
+  
+  .footer-section {
+    margin-bottom: 32px;
+  }
+  
+  .footer h4 {
+    margin: 0 0 16px;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--accent);
+  }
+  
+  .icon-row {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+  }
+  
+  .icon-row img {
+    width: 36px;
+    height: 36px;
+    opacity: 0.9;
+    transition: transform 0.15s ease, opacity 0.15s ease;
+  }
+  
+  .icon-row img:hover {
+    transform: translateY(-4px);
+    opacity: 1;
+  }
+  
+  copyright {
+    font-size: 0.8rem;
+    margin-top: 16px;
+  }
+  

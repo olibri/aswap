@@ -1,4 +1,8 @@
-
+:root {
+  --accent: #F3EF52;
+  --dark-bg: #1e1e1e; /* як у хедера */
+  --light-bg: #ffffff;
+}
 
 body {
   font-family: Roboto, "Helvetica Neue", sans-serif;
@@ -15,14 +19,14 @@ body.dark .primary {
   color: #F3EF52;
 }
 
+
 body.dark {
-  background-color: #27292F;
+  background: var(--dark-bg);
   color: #ffffff;
 }
 
-/* Світла тема */
 body.light {
-  background-color: #f9f9f9;
+  background: #f9f9f9;
   color: #1e1e1e;
 }
 
