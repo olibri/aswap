@@ -7,6 +7,7 @@ on:
 env:
   HOST: 65.109.86.205
   USER: p2p_user
+  TARGET_DIR: /opt/p2p_front
   DEPLOY_SCRIPT: /usr/local/bin/deploy_p2p_front.sh
 
 jobs:
@@ -18,20 +19,19 @@ jobs:
 
     - name: Add SSH key
       run: |
-        # Створити .ssh з правильними правами
-        mkdir -p ~/.ssh
-        chmod 700 ~/.ssh
-
-        # Записати ключ; прибираємо можливі CRLF
+        mkdir -p ~/.ssh && chmod 700 ~/.ssh
         echo "${{ secrets.SSH_PRIVATE_KEY }}" | tr -d '\r' > ~/.ssh/id_ed25519
         chmod 600 ~/.ssh/id_ed25519
-
-        # Довіряємо хостові
         ssh-keyscan -H ${{ env.HOST }} >> ~/.ssh/known_hosts
 
-    - name: Push latest code & run deploy script remotely
-
+    # ---------- 1. Копіюємо код ----------
+    - name: Sync project to server
       run: |
-        rsync -az --delete --exclude=".git" ./ ${{ env.USER }}@${{ env.HOST }}:/opt/p2p_front/
-        ssh ${{ env.USER }}@${{ env.HOST }} "${{ env.DEPLOY_SCRIPT }}"
+        rsync -az --delete --exclude=".git" ./ \
+          ${{ env.USER }}@${{ env.HOST }}:${{ env.TARGET_DIR }}/
 
+    # ---------- 2. Реліз/рестарт контейнера ----------
+    - name: Deploy (build & restart)
+      run: |
+        ssh ${{ env.USER }}@${{ env.HOST }} \
+          "sudo ${{ env.DEPLOY_SCRIPT }}"
