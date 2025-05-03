@@ -18,9 +18,15 @@ jobs:
 
     - name: Add SSH key
       run: |
-        install -m 600 -d ~/.ssh
-        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+        # Створити .ssh з правильними правами
+        mkdir -p ~/.ssh
+        chmod 700 ~/.ssh
+
+        # Записати ключ; прибираємо можливі CRLF
+        echo "${{ secrets.SSH_PRIVATE_KEY }}" | tr -d '\r' > ~/.ssh/id_ed25519
         chmod 600 ~/.ssh/id_ed25519
+
+        # Довіряємо хостові
         ssh-keyscan -H ${{ env.HOST }} >> ~/.ssh/known_hosts
 
     - name: Push latest code & run deploy script remotely
