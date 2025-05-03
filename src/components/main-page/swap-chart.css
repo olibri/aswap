@@ -2,9 +2,8 @@
   position: relative;
   padding: 96px 24px 120px;
   text-align: center;
-  overflow: hidden;
-  background: #1e1e1e;              /* ← чорний/темний фон */
-  color: #ffffff;                   /* базово білий текст */
+  overflow: hidden;             /* ← чорний/темний фон */
+                /* базово білий текст */
 }
 
 .home .hero h1 {
