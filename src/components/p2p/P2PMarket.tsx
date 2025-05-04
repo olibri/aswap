@@ -1,80 +1,70 @@
-import React, { useState } from 'react'
-import './p2p.css'
-import { useNavigate } from 'react-router-dom'
-
-type Order = {
-  id: string
-  type: 'buy' | 'sell'
-  amount: number
-  price: number
-  user: string
-  rating: number
-  gold?: boolean
-}
-
-const fakeOrders: Order[] = [
-  { id: '1', type: 'buy', amount: 100, price: 0.99, user: '0xAlice', rating: 4 },
-  { id: '2', type: 'sell', amount: 50, price: 1.01, user: '0xBob', rating: 5, gold: true },
-  { id: '3', type: 'buy', amount: 200, price: 0.98, user: '0xCarol', rating: 3 },
-  { id: '4', type: 'sell', amount: 120, price: 1.02, user: '0xDave', rating: 4 },
-]
-
-const renderStars = (count: number) => '★'.repeat(count) + '☆'.repeat(5 - count)
+import React, { useState } from 'react';
+import './p2p.css';
+import { useNavigate } from 'react-router-dom';
+import { useOffers } from '../../hooks/useOffers';
 
 const P2PMarket: React.FC = () => {
-  const [filter, setFilter] = useState<'all' | 'buy' | 'sell'>('all')
+  const { offers, loading, error } = useOffers(30000); // 30с
+  const [filter, setFilter] = useState<'all' | 'buy' | 'sell'>('all');
   const navigate = useNavigate();
 
-  const filteredOrders =
-    filter === 'all' ? fakeOrders : fakeOrders.filter((o) => o.type === filter)
+  // фільтр
+  const filtered = offers.filter(o =>
+    filter === 'all' ? true : filter === 'buy' ? o.price < 1 : o.price >= 1
+  );
+
+  if (loading) return <p className="p2p-market">Loading…</p>;
+  if (error)   return <p className="p2p-market">Error: {error}</p>;
 
   return (
     <div className="p2p-market">
+      {/* header */}
       <div className="market-header">
         <h2 className="primary">🧾 P2P Market</h2>
         <button
           className="create-order-button"
-          onClick={() => navigate('/create-order')}>
-            + Create Order
+          onClick={() => navigate('/create-order')}
+        >
+          + Create Order
         </button>
-
       </div>
 
+      {/* filter */}
       <div className="filter-buttons">
-        <button className={filter === 'all' ? 'active' : ''} onClick={() => setFilter('all')}>All</button>
-        <button className={filter === 'buy' ? 'active' : ''} onClick={() => setFilter('buy')}>Buy</button>
-        <button className={filter === 'sell' ? 'active' : ''} onClick={() => setFilter('sell')}>Sell</button>
+        {(['all','buy','sell'] as const).map(t => (
+          <button
+            key={t}
+            className={filter === t ? 'active' : ''}
+            onClick={() => setFilter(t)}
+          >
+            {t[0].toUpperCase()+t.slice(1)}
+          </button>
+        ))}
       </div>
 
-      {filteredOrders.map((order) => (
-        <div key={order.id} className="p2p-exchange-row">
+      {/* list */}
+      {filtered.map(o => (
+        <div key={o.id} className="p2p-exchange-row">
           <div className="user-col">
-            <div className="username">
-              {order.user}
-              {order.gold && <span className="badge">Gold</span>}
-            </div>
-            <div className="reviews">
-              {renderStars(order.rating)} <span>{order.rating * 20 + 18} reviews</span>
-            </div>
+            <div className="username">{o.seller}</div>
+            {/* rating / gold можна винести окремо */}
           </div>
           <div className="limit-col">
-            <div>From <b>{order.amount}</b> USDC</div>
-            <div>To <b>{order.amount * 1000}</b> USD</div>
-          </div>
-          <div className="rate-col">
-            <b>{order.price}</b> USDC = <b>1</b> USD
+            <div>From <b>{o.amount}</b> {o.fiatCode}</div>
+            <div>Rate<b>{o.price}</b></div>
           </div>
           <div className="action-col">
-          <button
+            <button
               className="exchange-btn"
-              onClick={() => navigate(`/swap/${order.id}`)}>
+              onClick={() => navigate(`/swap/${o.id}`)}
+            >
               Swap
             </button>
           </div>
         </div>
       ))}
     </div>
-  )
-}
+  );
+};
 
-export default P2PMarket
+export default P2PMarket;

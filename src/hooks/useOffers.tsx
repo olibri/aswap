@@ -1,0 +1,40 @@
+import { useEffect, useState, useRef } from 'react';
+import type { EscrowOrderDto } from '../types/offers';
+
+const API = import.meta.env.VITE_API_URL ?? 'http://localhost:8085/api/platform';
+type Timer = ReturnType<typeof setInterval>;
+export function useOffers(pollMs = 30000) {
+  const [offers, setOffers] = useState<EscrowOrderDto[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
+  const timer = useRef<Timer | null>(null);
+
+  const fetchOffers = async (signal?: AbortSignal) => {
+    try {
+      const res = await fetch(`${API}/all-new-offers`, { signal });
+      if (!res.ok) throw new Error(res.statusText);
+      const data = (await res.json()) as EscrowOrderDto[];
+      setOffers(data);
+      setError(null);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (e: any) {
+      if (e.name !== 'AbortError') setError(e.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const controller = new AbortController();
+    fetchOffers(controller.signal);
+
+    timer.current = setInterval(() => fetchOffers(), pollMs);
+    return () => {
+      controller.abort();
+      if (timer.current) clearInterval(timer.current);
+        };
+  }, [pollMs]);
+
+  return { offers, loading, error };
+}
