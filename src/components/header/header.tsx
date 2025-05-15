@@ -32,7 +32,7 @@ const Header: React.FC<Props> = ({ onToggleTheme, currentTheme }) => {
       <nav className="nav desktop">
         <a href="/market-p2p-orders">Online</a>
         <a href="#">Offline</a>
-        <a href="#">Swap</a>
+        <a href="#">Swappp</a>
         <a href="#">My orders</a>
       </nav>
 
