@@ -1,7 +1,11 @@
 import { useEffect, useState, useRef } from 'react';
 import type { EscrowOrderDto } from '../types/offers';
 
-const API = import.meta.env.VITE_API_URL ?? 'http://localhost:8085/api/platform';
+// const API = import.meta.env.VITE_API_URL ?? 'http://localhost:5000/api/platform';
+
+const API = import.meta.env.VITE_API_PREFIX ?? '/api';
+
+
 type Timer = ReturnType<typeof setInterval>;
 export function useOffers(pollMs = 30000) {
   const [offers, setOffers] = useState<EscrowOrderDto[]>([]);
@@ -12,7 +16,7 @@ export function useOffers(pollMs = 30000) {
 
   const fetchOffers = async (signal?: AbortSignal) => {
     try {
-      const res = await fetch(`${API}/all-new-offers`, { signal });
+      const res = await fetch(`${API}/platform/all-new-offers`, { signal });
       if (!res.ok) throw new Error(res.statusText);
       const data = (await res.json()) as EscrowOrderDto[];
       setOffers(data);

@@ -6,27 +6,27 @@ import { nodePolyfills } from 'vite-plugin-node-polyfills';
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(),     nodePolyfills() ],
-  define: {
-    'process.env': {}
+  plugins: [react(), nodePolyfills()],
+  define: { 'process.env': {} },
+
+  base: '/',              
+  preview: {
+    port: 8080,
+    strictPort: true,
   },
 
- base: "/",
- preview: {
-  port: 8080,
-  strictPort: true,
- },
- server: {
-  proxy: {
-    '/api': {
-      target: 'http://localhost:8085',
-      changeOrigin: true,
-      secure: false,
+  server: {
+    host: true,
+    port: 8080,
+    strictPort: true,
+    origin: 'http://localhost:8080',
+
+    proxy: {
+      '/api': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,
+        secure: false,
+      },
     },
   },
-  port: 8080,
-  strictPort: true,
-  host: true,
-  origin: "http://0.0.0.0:8080",
- },
-})
+});
