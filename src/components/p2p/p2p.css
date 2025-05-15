@@ -11,14 +11,15 @@ body {
   
 
   /* Контейнер */
-  .p2p-market {
-    max-width: 720px;
-    margin: 40px auto;
-    background-color: #1f1f23;
-    border-radius: 16px;
-    padding: 24px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
-  }
+.p2p-market {
+  max-width: 1080px; /* було 720px */
+  margin: 40px auto;
+  background-color: #1f1f23;
+  border-radius: 16px;
+  padding: 32px;
+  box-shadow: 0 0 16px rgba(0, 0, 0, 0.4);
+}
+
   
   /* Заголовок */
   .p2p-market h2 {
@@ -222,3 +223,102 @@ body {
     background-color: #e0dc48;
   }
   
+
+
+
+  .p2p-order-card {
+  background-color: #2e3038;
+  border-left: 6px solid transparent;
+  border-radius: 12px;
+  padding: 10px 16px;
+  margin-bottom: 14px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: 0 0 6px rgba(0,0,0,0.2);
+}
+.p2p-order-card.buy { border-left-color: #4caf50; }
+.p2p-order-card.sell { border-left-color: #f44336; }
+
+.p2p-order-card:hover {
+  transform: translateY(-2px);
+  background-color: #383a42;
+}
+
+.p2p-order-top {
+  display: flex;
+  justify-content: space-between;
+  font-size: 16px;
+  font-weight: bold;
+  color: #fff;
+}
+.order-type {
+  text-transform: uppercase;
+  color: #F3EF52;
+}
+
+.rate {
+  font-size: 16px;
+  font-weight: bold;
+  color: #F3EF52;
+}
+
+.p2p-order-middle {
+  display: flex;
+  justify-content: space-between;
+  font-size: 15px;
+  color: #ddd;
+}
+.amount-label {
+  color: #aaa;
+}
+
+.p2p-order-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.user {
+  font-size: 14px;
+  color: #bbb;
+  font-style: italic;
+}
+
+.swap-btn {
+  background-color: #F3EF52;
+  color: #27292F;
+  font-weight: 600;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+.swap-btn:hover {
+  background-color: #e0dc48;
+}
+
+
+.filter-bar {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.filter-selects {
+  display: flex;
+  gap: 12px;
+}
+
+.filter-selects select {
+  background-color: #2e3038;
+  color: #fff;
+  border: 1px solid #444;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 14px;
+}
