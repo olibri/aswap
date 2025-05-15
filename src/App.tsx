@@ -36,26 +36,25 @@ function App() {
     setTheme(prev => (prev === 'dark' ? 'light' : 'dark'))
   }
 
- return (
+
+  return (
     <ConnectionProvider endpoint={endpoint}>
-      <WalletProvider wallets={wallets} autoConnect>
+      <WalletProvider  wallets={wallets} autoConnect>
         <WalletModalProvider>
-          <div className="page-wrapper"> {/* ключовий wrapper */}
+          <div className="App">
             <Header onToggleTheme={toggleTheme} currentTheme={theme} />
-
-            <main className="page-main"> {/* ключовий main */}
-              <Routes>
-                <Route path="/" element={<SwapChart />} />
-                <Route path="/market-p2p-orders" element={<P2PMarket />} />
-                <Route path="/swap/:id" element={<SwapPage />} />
-                <Route path="/create-order" element={<CreateOrderPage />} />
-              </Routes>
+              <main className="AppMain">
+                <Routes>
+                  <Route path="/" element={<SwapChart />} />
+                  <Route path="/market-p2p-orders" element={<P2PMarket />} />
+                  <Route path="/swap/:id" element={<SwapPage />} />
+                  <Route path="/create-order" element={<CreateOrderPage />} />
+                </Routes>
             </main>
-
-            <Footer />
+            <Footer/>
           </div>
         </WalletModalProvider>
-      </WalletProvider>
+      </WalletProvider >
     </ConnectionProvider>
   );
 }

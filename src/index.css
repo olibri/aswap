@@ -12,19 +12,16 @@ body {
 
 html, body, #root {
   height: 100%;
-  margin: 0;
 }
 
-.page-wrapper {
+.AppLayout {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
 }
 
-.page-main {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
+.AppMain {
+  flex: 1 0 auto;
 }
 
 footer {
