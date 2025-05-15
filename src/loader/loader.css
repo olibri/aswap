@@ -1,0 +1,26 @@
+.loader-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(15, 15, 15, 0.8);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+}
+
+.loader-box {
+  text-align: center;
+  color: #f3ef52;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.loader-img {
+  width: 100px;
+  height: 100px;
+  margin-bottom: 16px;
+}

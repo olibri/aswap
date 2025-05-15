@@ -7,6 +7,7 @@ import { BN } from '@coral-xyz/anchor'
 import { createAssociatedTokenAccountInstruction, getAssociatedTokenAddress, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { PublicKey, SystemProgram, Transaction } from '@solana/web3.js'
 import { Listbox, ListboxButton, ListboxOption, ListboxOptions } from '@headlessui/react'
+import Loader from '../../../loader/Loader'
 
 
 
@@ -38,6 +39,7 @@ type OrderType = 'buy' | 'sell';
 
 
 const CreateOrderPage: React.FC = () => {
+  const [isLoading, setIsLoading] = useState(false);
 
   const [type, setType] = useState<OrderType>('buy');
   const [token, setToken] = useState<TokenValue>('usdc');
@@ -51,69 +53,80 @@ const CreateOrderPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setIsLoading(true);
 
     if (!program) {
         alert('Program is not ready');
         return;
     }
+    try {
+      const tok = TOKENS.find(t => t.value === token)!;
+        const fiatCode = fiat;
+        const amountF = parseFloat(amount);
+        const priceF  = parseFloat(price);
 
-    const tok = TOKENS.find(t => t.value === token)!;
-    const fiatCode = fiat;
-    const amountF = parseFloat(amount);
-    const priceF  = parseFloat(price);
+        if (!amountF || !priceF || amountF <= 0 || priceF <= 0) {
+          return alert('Amount та Price мають бути додатними числами');
+        }
+      
+        const amountBn = new BN(Math.round(amountF * 10 ** tok.decimals));
+        const priceBn  = new BN(Math.round(priceF  * 100));
+        const offerType = type === 'sell' ? { sell: {} } : { buy: {} };
 
-    if (!amountF || !priceF || amountF <= 0 || priceF <= 0) {
-      return alert('Amount та Price мають бути додатними числами');
+        const wallet = program.provider.publicKey!;
+        const dealIdBn = new BN(Date.now());
+
+        const [escrowPda] = pdaEscrowOffer(wallet, dealIdBn);
+        const [vaultAuthPda] = pdaVaultAuthority(escrowPda);
+
+        const sellerTokenAccount = await getAssociatedTokenAddress(tok.mint, wallet);
+        const vaultTokenAccount  = await getAssociatedTokenAddress(tok.mint, vaultAuthPda, true);
+
+        const tx = new Transaction();
+        const vaultInfo = await program.provider.connection.getAccountInfo(
+            vaultTokenAccount
+        );
+
+        if (!vaultInfo) {
+          tx.add(
+                  createAssociatedTokenAccountInstruction(
+                    wallet,
+                    vaultTokenAccount,
+                    vaultAuthPda,
+                    tok.mint
+                  )
+                );
+          }
+
+          console.log('type:', type);
+          console.log('offerType:', offerType);
+          const ix = await program.methods
+          .initializeOffer(amountBn, tok.mint, fiatCode, priceBn, dealIdBn, offerType)
+          .accounts({
+            escrowAccount: escrowPda,
+            sellerTokenAccount,
+            vaultAccount:   vaultTokenAccount,
+            seller:         wallet,
+            tokenProgram:   TOKEN_PROGRAM_ID,
+            systemProgram:  SystemProgram.programId,
+          })
+          .instruction();
+
+        tx.add(ix);
+        const sig = await program.provider.sendAndConfirm!(tx, [], {skipPreflight: true});
+        console.log('🎉 initialize_offer tx:', sig);
+
+        navigate('/');
     }
-  
-    const amountBn = new BN(Math.round(amountF * 10 ** tok.decimals));
-    const priceBn  = new BN(Math.round(priceF  * 100));
-    const offerType = type === 'sell' ? { sell: {} } : { buy: {} };
+    catch (e) {
+      console.error('Error:', e);
+      alert('Error: ' + e);
+      return;
+    }
+    finally{
+      setIsLoading(false);
 
-    const wallet = program.provider.publicKey!;
-    const dealIdBn = new BN(Date.now());
-
-    const [escrowPda] = pdaEscrowOffer(wallet, dealIdBn);
-    const [vaultAuthPda] = pdaVaultAuthority(escrowPda);
-
-    const sellerTokenAccount = await getAssociatedTokenAddress(tok.mint, wallet);
-    const vaultTokenAccount  = await getAssociatedTokenAddress(tok.mint, vaultAuthPda, true);
-
-    const tx = new Transaction();
-    const vaultInfo = await program.provider.connection.getAccountInfo(
-        vaultTokenAccount
-    );
-
-    if (!vaultInfo) {
-      tx.add(
-              createAssociatedTokenAccountInstruction(
-                wallet,
-                vaultTokenAccount,
-                vaultAuthPda,
-                tok.mint
-              )
-            );
-      }
-
-      console.log('type:', type);
-      console.log('offerType:', offerType);
-      const ix = await program.methods
-      .initializeOffer(amountBn, tok.mint, fiatCode, priceBn, dealIdBn, offerType)
-      .accounts({
-        escrowAccount: escrowPda,
-        sellerTokenAccount,
-        vaultAccount:   vaultTokenAccount,
-        seller:         wallet,
-        tokenProgram:   TOKEN_PROGRAM_ID,
-        systemProgram:  SystemProgram.programId,
-      })
-      .instruction();
-
-    tx.add(ix);
-    const sig = await program.provider.sendAndConfirm!(tx, [], {skipPreflight: true});
-    console.log('🎉 initialize_offer tx:', sig);
-
-    navigate('/');
+    }
   }
   
   return (
@@ -171,6 +184,12 @@ const CreateOrderPage: React.FC = () => {
           Create
         </button>
       </form>
+      
+      {isLoading && (
+        <div className="loader-container">
+          <Loader />
+        </div>
+      )}
     </div>
   );
 }
