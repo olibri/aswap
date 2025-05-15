@@ -8,11 +8,9 @@ body {
   }
   
 
-  
-
-  /* Контейнер */
 .p2p-market {
-  max-width: 1080px; /* було 720px */
+  flex-grow: 1;
+  max-width: 1080px; 
   margin: 40px auto;
   background-color: #1f1f23;
   border-radius: 16px;
