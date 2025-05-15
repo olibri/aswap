@@ -68,6 +68,7 @@ const CreateOrderPage: React.FC = () => {
   
     const amountBn = new BN(Math.round(amountF * 10 ** tok.decimals));
     const priceBn  = new BN(Math.round(priceF  * 100));
+    const offerType = type === 'sell' ? { sell: {} } : { buy: {} };
 
     const wallet = program.provider.publicKey!;
     const dealIdBn = new BN(Date.now());
@@ -94,8 +95,10 @@ const CreateOrderPage: React.FC = () => {
             );
       }
 
+      console.log('type:', type);
+      console.log('offerType:', offerType);
       const ix = await program.methods
-      .initializeOffer(amountBn, tok.mint, fiatCode, priceBn, dealIdBn)
+      .initializeOffer(amountBn, tok.mint, fiatCode, priceBn, dealIdBn, offerType)
       .accounts({
         escrowAccount: escrowPda,
         sellerTokenAccount,
@@ -107,7 +110,7 @@ const CreateOrderPage: React.FC = () => {
       .instruction();
 
     tx.add(ix);
-    const sig = await program.provider.sendAndConfirm!(tx, []);
+    const sig = await program.provider.sendAndConfirm!(tx, [], {skipPreflight: true});
     console.log('🎉 initialize_offer tx:', sig);
 
     navigate('/');

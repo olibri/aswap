@@ -408,6 +408,14 @@
         {
           "name": "_deal_id",
           "type": "u64"
+        },
+        {
+          "name": "offer_type",
+          "type": {
+            "defined": {
+              "name": "OfferType"
+            }
+          }
         }
       ]
     },
@@ -545,6 +553,86 @@
       ]
     }
   ],
+  "events": [
+    {
+      "name": "BuyerSigned",
+      "discriminator": [
+        194,
+        63,
+        212,
+        220,
+        104,
+        142,
+        85,
+        39
+      ]
+    },
+    {
+      "name": "EscrowInitialized",
+      "discriminator": [
+        222,
+        186,
+        157,
+        47,
+        145,
+        142,
+        176,
+        248
+      ]
+    },
+    {
+      "name": "FundsReleased",
+      "discriminator": [
+        178,
+        119,
+        252,
+        230,
+        131,
+        104,
+        210,
+        210
+      ]
+    },
+    {
+      "name": "OfferClaimed",
+      "discriminator": [
+        147,
+        116,
+        125,
+        129,
+        145,
+        244,
+        99,
+        178
+      ]
+    },
+    {
+      "name": "OfferInitialized",
+      "discriminator": [
+        77,
+        98,
+        4,
+        41,
+        157,
+        239,
+        71,
+        46
+      ]
+    },
+    {
+      "name": "SellerSigned",
+      "discriminator": [
+        200,
+        62,
+        14,
+        52,
+        219,
+        73,
+        17,
+        78
+      ]
+    }
+  ],
   "errors": [
     {
       "code": 6000,
@@ -563,6 +651,22 @@
     }
   ],
   "types": [
+    {
+      "name": "BuyerSigned",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "escrow",
+            "type": "pubkey"
+          },
+          {
+            "name": "deal_id",
+            "type": "u64"
+          }
+        ]
+      }
+    },
     {
       "name": "EscrowAccount",
       "type": {
@@ -608,6 +712,189 @@
           {
             "name": "seller_signed",
             "type": "bool"
+          },
+          {
+            "name": "offer_type",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "EscrowInitialized",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "escrow",
+            "type": "pubkey"
+          },
+          {
+            "name": "seller",
+            "type": "pubkey"
+          },
+          {
+            "name": "buyer",
+            "type": "pubkey"
+          },
+          {
+            "name": "token_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "fiat_code",
+            "type": {
+              "array": [
+                "u8",
+                8
+              ]
+            }
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "price",
+            "type": "u64"
+          },
+          {
+            "name": "deal_id",
+            "type": "u64"
+          },
+          {
+            "name": "ts",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "FundsReleased",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "escrow",
+            "type": "pubkey"
+          },
+          {
+            "name": "buyer",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "deal_id",
+            "type": "u64"
+          },
+          {
+            "name": "ts",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "OfferClaimed",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "escrow",
+            "type": "pubkey"
+          },
+          {
+            "name": "buyer",
+            "type": "pubkey"
+          },
+          {
+            "name": "deal_id",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "OfferInitialized",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "escrow",
+            "type": "pubkey"
+          },
+          {
+            "name": "seller",
+            "type": "pubkey"
+          },
+          {
+            "name": "token_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "fiat_code",
+            "type": {
+              "array": [
+                "u8",
+                8
+              ]
+            }
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "price",
+            "type": "u64"
+          },
+          {
+            "name": "deal_id",
+            "type": "u64"
+          },
+          {
+            "name": "ts",
+            "type": "i64"
+          },
+          {
+            "name": "offer_type",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "OfferType",
+      "repr": {
+        "kind": "rust"
+      },
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Sell"
+          },
+          {
+            "name": "Buy"
+          }
+        ]
+      }
+    },
+    {
+      "name": "SellerSigned",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "escrow",
+            "type": "pubkey"
+          },
+          {
+            "name": "deal_id",
+            "type": "u64"
           }
         ]
       }
