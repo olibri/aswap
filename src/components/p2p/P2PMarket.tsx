@@ -5,6 +5,18 @@ import { useOffers } from '../../hooks/useOffers';
 import { Scale } from 'lucide-react';
 
 const P2PMarket: React.FC = () => {
+
+  const TOKENS = [
+  {
+    name: 'USDC',
+    mint: 'Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr',
+  },
+  {
+    name: 'SOL',
+    mint: 'So11111111111111111111111111111111111111112',
+  },
+];
+
   const { offers, loading, error } = useOffers(30000); // 30с
   const [filter, setFilter] = useState<'all' | 'buy' | 'sell'>('all');
   const navigate = useNavigate();
@@ -82,27 +94,33 @@ const filtered = offers.filter(o =>
             : 'Unknown';
 
           return (
-            <div key={o.id} className={`p2p-order-card ${isBuy ? 'buy' : 'sell'}`}>
-              <div className="p2p-order-top">
-                <span className="order-type">{sideLabel}</span>
-                <span className="rate">
-                  {o.price} {o.fiatCode}
-                </span>
-              </div>
-              <div className="p2p-order-middle">
-                <span className="amount-label">Amount:</span>
-                <span className="amount-value">{o.amount}</span>
-              </div>
-              <div className="p2p-order-bottom">
-                <span className="user">{sellerDisplay}</span>
-                <button
-                  className="swap-btn"
-                  onClick={() => navigate(`/swap/${o.id}`)}
-                >
-                  Swap
-                </button>
-              </div>
+          <div key={o.id} className={`p2p-order-card ${isBuy ? 'buy' : 'sell'}`}>
+          <div className="order-top">
+            <div className="order-title">
+              <span className="side-label">{sideLabel}</span>
+              <span className="amount">
+                {o.amount} {TOKENS.find(t => t.mint === o.tokenMint)?.name ?? 'TOKEN'}
+              </span>
             </div>
+            <div className="order-price">
+              Price: {o.price} {o.fiatCode}
+            </div>
+          </div>
+
+          <div className="order-footer">
+            <span className="seller">
+              From: {sellerDisplay}
+            </span>
+            <button
+              className="swap-btn"
+              onClick={() => navigate(`/swap/${o.id}`)}
+            >
+              Swap
+            </button>
+          </div>
+        </div>
+
+
           );
         })
       )}

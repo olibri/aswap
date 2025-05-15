@@ -1,288 +1,144 @@
-/* Глобальний шрифт */
 body {
-    font-family: Roboto, "Helvetica Neue", sans-serif;
-    background-color: #27292F;
-    color: #ffffff;
-    margin: 0;
-    padding: 0;
-  }
-  
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+  background-color: #27292F;
+  color: #ffffff;
+  margin: 0;
+  padding: 0;
+}
+
 .p2p-market {
   width: 100%;
-  max-width: 1280px;    
+  max-width: 1280px;
   margin: 40px auto;
   padding: 24px 32px;
   border-radius: 16px;
-  background:#1f1f23;
-  box-shadow:0 0 16px rgba(0,0,0,.4);
+  background: #1f1f23;
+  box-shadow: 0 0 16px rgba(0, 0, 0, .4);
 }
 
-  
-  /* Заголовок */
-  .p2p-market h2 {
-    color: #F3EF52;
-    font-size: 24px;
-    margin-bottom: 24px;
-  }
-  
-  /* Ордер */
-  .p2p-order {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 18px;
-    border-radius: 12px;
-    margin-bottom: 12px;
-    background-color: #2e3038;
-    border-left: 6px solid #F3EF52;
-    transition: transform 0.2s ease;
-  }
-  
-  .p2p-order:hover {
-    transform: translateY(-2px);
-    background-color: #383a42;
-  }
-  
-  .p2p-order.buy {
-    border-left-color: #F3EF52; 
-  }
-  
-  .p2p-order.sell {
-    border-left-color: #F3EF52; 
-  }
-  
-  .p2p-order .type {
-    text-transform: uppercase;
-    font-size: 12px;
-    color: #aaa;
-  }
-  
-.p2p-order .info {
-    font-weight: 600;
-    margin-top: 4px;
-  }
-  
-  .p2p-order .info .amount {
-    color: currentColor;
-    font-weight: bold;
-  }
-  
+/* Header and Filter */
+.market-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+.create-order-button {
+  background-color: #F3EF52;
+  color: #27292F;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+.create-order-button:hover {
+  background-color: #e0dc48;
+}
+.filter-bar {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.filter-buttons {
+  display: flex;
+  gap: 12px;
+}
+.filter-buttons button {
+  background-color: #2e3038;
+  color: #fff;
+  border: 1px solid #444;
+  padding: 6px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+}
+.filter-buttons button:hover {
+  background-color: #383a42;
+}
+.filter-buttons button.active {
+  background-color: #F3EF52;
+  color: #27292F;
+  font-weight: 700;
+  border-color: #F3EF52;
+}
+.filter-selects {
+  display: flex;
+  gap: 12px;
+}
+.filter-selects select {
+  background-color: #2e3038;
+  color: #fff;
+  border: 1px solid #444;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 14px;
+}
 
-  .p2p-order .user {
-    font-size: 12px;
-    color: #ccc;
-    font-style: italic normal;
-    text-align: right;
-  }
-  
-  .p2p-order .stars {
-    font-style: normal;
-    font-size: 14px;
-    color: #F3EF52;
-    margin-top: 4px;
-  }
-
-
-  .filter-buttons {
-    display: flex;
-    gap: 12px;
-    margin-bottom: 20px;
-  }
-  
-  .filter-buttons button {
-    background-color: #2e3038;
-    color: #fff;
-    border: 1px solid #444;
-    padding: 6px 16px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: 500;
-    transition: background-color 0.2s ease;
-  }
-  
-  .filter-buttons button:hover {
-    background-color: #383a42;
-  }
-  
-  .filter-buttons button.active {
-    background-color: #F3EF52;
-    color: #27292F;
-    font-weight: 700;
-    border-color: #F3EF52;
-  }
-  
-
-
-
-  .market-header {
-    display: flex;
-    justify-content: space-between;
-    /* align-items:   center; */
-    margin-bottom: 20px;
-  }
-  
-  .create-order-button {
-    background-color: #F3EF52;
-    color: #27292F;
-    font-weight: 600;
-    border: none;
-    border-radius: 8px;
-    padding: 8px 16px;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-  }
-  
-  .create-order-button:hover {
-    background-color: #e0dc48;
-  }
-  
-  body.light .create-order-button {
-    background-color: #27292F;
-    color: #F3EF52;
-  }
-  
-  body.light .create-order-button:hover {
-    background-color: #1e1e1e;
-  }
-
-
-  .p2p-exchange-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background-color: #2e3038;
-    padding: 16px 20px;
-    border-radius: 12px;
-    margin-bottom: 12px;
-    border-left: 6px solid #F3EF52;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-  }
-  .p2p-exchange-row:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    background-color: #383a42;
-  }
-
-  .username {
-    font-weight: bold;
-    color: #F3EF52;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-  
-  .badge {
-    background-color: #F3EF52;
-    color: #27292F;
-    font-size: 12px;
-    padding: 2px 6px;
-    border-radius: 6px;
-    font-weight: 600;
-  }
-  .user-col {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    min-width: 125px;
-  }
-  
-  .reviews {
-    font-size: 13px;
-    color: #aaa;
-    margin-top: 4px;
-    min-height: 18px; 
-    white-space: nowrap;
-  }
-  
-  .limit-col,
-  .rate-col {
-    font-size: 14px;
-    text-align: left;
-    color: #ddd;
-  }
-  
-  .rate-col b {
-    color: #fff;
-  }
-  
-  .exchange-btn {
-    background-color: #F3EF52;
-    color: #27292F;
-    font-weight: 600;
-    border: none;
-    padding: 8px 14px;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-  }
-  
-  .exchange-btn:hover {
-    background-color: #e0dc48;
-  }
-  
-
-
-
-  .p2p-order-card {
+/* Order Card */
+.p2p-order-card {
   background-color: #2e3038;
   border-left: 6px solid transparent;
   border-radius: 12px;
-  padding: 10px 16px;
-  margin-bottom: 14px;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  padding: 16px 20px;
+  margin-bottom: 16px;
   display: flex;
   flex-direction: column;
   gap: 10px;
-  box-shadow: 0 0 6px rgba(0,0,0,0.2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s ease, background-color 0.2s ease;
 }
-.p2p-order-card.buy { border-left-color: #4caf50; }
-.p2p-order-card.sell { border-left-color: #f44336; }
-
+.p2p-order-card.buy {
+  border-left-color: #4caf50;
+}
+.p2p-order-card.sell {
+  border-left-color: #f44336;
+}
 .p2p-order-card:hover {
   transform: translateY(-2px);
   background-color: #383a42;
 }
 
-.p2p-order-top {
+.order-top {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.order-title {
   display: flex;
   justify-content: space-between;
   font-size: 16px;
-  font-weight: bold;
+  font-weight: 600;
   color: #fff;
 }
-.order-type {
+.side-label {
   text-transform: uppercase;
   color: #F3EF52;
 }
-
-.rate {
-  font-size: 16px;
-  font-weight: bold;
-  color: #F3EF52;
+.amount {
+  color: #fff;
 }
-
-.p2p-order-middle {
-  display: flex;
-  justify-content: space-between;
+.order-price {
   font-size: 15px;
-  color: #ddd;
-}
-.amount-label {
-  color: #aaa;
+  color: #ccc;
+  padding-left: 2px;
 }
 
-.p2p-order-bottom {
+.order-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
-}
-
-.user {
   font-size: 14px;
-  color: #bbb;
+  color: #aaa;
+}
+.seller {
   font-style: italic;
 }
 
+/* Swap Button */
 .swap-btn {
   background-color: #F3EF52;
   color: #27292F;
@@ -295,27 +151,4 @@ body {
 }
 .swap-btn:hover {
   background-color: #e0dc48;
-}
-
-
-.filter-bar {
-  display: flex;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 16px;
-  margin-bottom: 24px;
-}
-
-.filter-selects {
-  display: flex;
-  gap: 12px;
-}
-
-.filter-selects select {
-  background-color: #2e3038;
-  color: #fff;
-  border: 1px solid #444;
-  padding: 6px 12px;
-  border-radius: 8px;
-  font-size: 14px;
 }

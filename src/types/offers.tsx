@@ -8,5 +8,6 @@ export interface EscrowOrderDto {
     status: 'PendingOnChain' | 'OnChain' | 'Released' | 'Cancelled';
     createdAtUtc: string;
     offerSide: 0 | 1; 
+    tokenMint: string;
   }
   
