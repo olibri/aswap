@@ -1,230 +1,288 @@
-import React, { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import './create-order.css'
-import { useEscrowProgram } from '../../../hook/useEscrowProgram'
-import { pdaEscrowOffer, pdaVaultAuthority } from '../../../solana/constants'
-import { BN } from '@coral-xyz/anchor'
-import { createAssociatedTokenAccountInstruction, getAssociatedTokenAddress, TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import { PublicKey, SystemProgram, Transaction } from '@solana/web3.js'
-import { Listbox, ListboxButton, ListboxOption, ListboxOptions } from '@headlessui/react'
-import Loader from '../../../loader/Loader'
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import {
+  Box,
+  Button,
+  CircularProgress,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Select,
+  SelectChangeEvent,
+  Step,
+  StepButton,
+  Stepper,
+  TextField,
+  ThemeProvider,
+  createTheme,
+} from '@mui/material';
+import { useEscrowProgram } from '../../../hook/useEscrowProgram';
+import { pdaEscrowOffer, pdaVaultAuthority } from '../../../solana/constants';
+import { BN } from '@coral-xyz/anchor';
+import {
+  createAssociatedTokenAccountInstruction,
+  getAssociatedTokenAddress,
+  TOKEN_PROGRAM_ID,
+} from '@solana/spl-token';
+import { PublicKey, SystemProgram, Transaction } from '@solana/web3.js';
+import Loader from '../../../loader/Loader';
 
-
+// Palette colors
+const accentColor = '#F3EF52';
+const darkText = '#27292F';
+const bgPrimary = '#1f1f23';
+const API_PREFIX = import.meta.env.VITE_API_PREFIX ?? '/api';
+// Theme including dark mode
+const theme = createTheme({
+  palette: {
+    mode: 'dark',
+    primary: { main: accentColor, contrastText: darkText },
+    background: { default: bgPrimary, paper: bgPrimary },
+    text: { primary: '#fff', secondary: '#aaa' },
+  },
+});
 
 const TOKENS = [
-  {
-    name: 'USDC',
-    value: 'usdc',
-    mint: new PublicKey('Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr'),
-    decimals: 6,
-  },
-  {
-    name: 'SOL',
-    value: 'sol',
-    mint: new PublicKey('So11111111111111111111111111111111111111112'),
-    decimals: 9,
-  },
+  { name: 'USDC', value: 'usdc', mint: new PublicKey('Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr'), decimals: 6 },
+  { name: 'SOL',  value: 'sol',  mint: new PublicKey('So11111111111111111111111111111111111111112'), decimals: 9 },
 ] as const;
-  
+const FIAT = [ { name: 'USD', value: 'USD' }, { name: 'EUR', value: 'EUR' }, { name: 'UAH', value: 'UAH' } ] as const;
 
-const FIAT = [
-  { name: 'USD', value: 'USD' },
-  { name: 'EUR', value: 'EUR' },
-  { name: 'UAH', value: 'UAH' },
-] as const;
-
-type TokenValue = typeof TOKENS[number]['value'];
-type FiatValue = typeof FIAT[number]['value'];
 type OrderType = 'buy' | 'sell';
-
+const steps = ['Type', 'Asset to Exchange', 'Asset to Receive', 'Details'];
+enum StepIndex { TYPE, ASSET_TO_EXCHANGE, ASSET_TO_RECEIVE, DETAILS }
 
 const CreateOrderPage: React.FC = () => {
-  const [isLoading, setIsLoading] = useState(false);
-
+  const [activeStep, setActiveStep] = useState<StepIndex>(StepIndex.TYPE);
   const [type, setType] = useState<OrderType>('buy');
-  const [token, setToken] = useState<TokenValue>('usdc');
-  const [fiat, setFiat]   = useState<FiatValue>('USD');
-  const [amount, setAmount] = useState('');
-  const [price,  setPrice]  = useState('');
+  const [token, setToken] = useState<typeof TOKENS[number]['value']>(TOKENS[0].value);
+  const [fiat, setFiat] = useState<typeof FIAT[number]['value']>(FIAT[0].value);
 
-  
-  const navigate = useNavigate()
+  // Common
+  const [amount, setAmount] = useState('');       // crypto amount for buy or sell
+  const [price, setPrice] = useState('');         // price per token in fiat
+
+  // Ranges
+  const [minFiat, setMinFiat] = useState('');     // user's accepted fiat range: min
+  const [maxFiat, setMaxFiat] = useState('');     // user's accepted fiat range: max
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const navigate = useNavigate();
   const program = useEscrowProgram();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true);
+  const handleStep = (step: StepIndex) => () => setActiveStep(step);
+  const handleNext = () => setActiveStep(prev => (prev + 1) as StepIndex);
+  const handleBack = () => setActiveStep(prev => (prev - 1) as StepIndex);
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
     if (!program) {
-        alert('Program is not ready');
-        return;
+      alert('Program not ready');
+      setIsSubmitting(false);
+      return;
     }
     try {
       const tok = TOKENS.find(t => t.value === token)!;
-        const fiatCode = fiat;
-        const amountF = parseFloat(amount);
-        const priceF  = parseFloat(price);
+      const amountF = parseFloat(amount);
+      const priceF = parseFloat(price);
+      const minF    = parseFloat(minFiat);
+      const maxF    = parseFloat(maxFiat);
 
-        if (!amountF || !priceF || amountF <= 0 || priceF <= 0) {
-          return alert('Amount та Price мають бути додатними числами');
-        }
-      
-        const amountBn = new BN(Math.round(amountF * 10 ** tok.decimals));
-        const priceBn  = new BN(Math.round(priceF  * 100));
-        const offerType = type === 'sell' ? { sell: {} } : { buy: {} };
+      // Validate common fields
+      if (!amountF || amountF <= 0) {
+        alert('Enter a valid crypto amount');
+        setIsSubmitting(false);
+        return;
+      }
+      if (!priceF || priceF <= 0) {
+        alert('Enter a valid price');
+        setIsSubmitting(false);
+        return;
+      }
+      // Validate range
+      if (!minF || !maxF || minF <= 0 || maxF <= 0 || minF >= maxF) {
+        alert('Specify a valid fiat range (min < max)');
+        setIsSubmitting(false);
+        return;
+      }
+      console.log(`Fiat range: ${minF} - ${maxF}`);
 
-        const wallet = program.provider.publicKey!;
-        const dealIdBn = new BN(Date.now());
+      // On-chain uses exact amount and price
+      const amountBn = new BN(Math.round(amountF * 10 ** tok.decimals));
+      const priceBn  = new BN(Math.round(priceF * 100));
+      const offerType = type === 'sell' ? { sell: {} } : { buy: {} };
+      const wallet = program.provider.publicKey!;
+      const dealIdBn = new BN(Date.now());
 
-        const [escrowPda] = pdaEscrowOffer(wallet, dealIdBn);
-        const [vaultAuthPda] = pdaVaultAuthority(escrowPda);
+      const [escrowPda]     = pdaEscrowOffer(wallet, dealIdBn);
+      const [vaultAuthPda]  = pdaVaultAuthority(escrowPda);
+      const sellerTokenAcc  = await getAssociatedTokenAddress(tok.mint, wallet);
+      const vaultTokenAcc   = await getAssociatedTokenAddress(tok.mint, vaultAuthPda, true);
 
-        const sellerTokenAccount = await getAssociatedTokenAddress(tok.mint, wallet);
-        const vaultTokenAccount  = await getAssociatedTokenAddress(tok.mint, vaultAuthPda, true);
+      const tx = new Transaction();
+      const vaultInfo = await program.provider.connection.getAccountInfo(vaultTokenAcc);
+      if (!vaultInfo) tx.add(createAssociatedTokenAccountInstruction(wallet, vaultTokenAcc, vaultAuthPda, tok.mint));
 
-        const tx = new Transaction();
-        const vaultInfo = await program.provider.connection.getAccountInfo(
-            vaultTokenAccount
+      const ix = await program.methods
+        .initializeOffer(amountBn, tok.mint, fiat, priceBn, dealIdBn, offerType)
+        .accounts({ escrowAccount: escrowPda, sellerTokenAccount: sellerTokenAcc, vaultAccount: vaultTokenAcc, seller: wallet, tokenProgram: TOKEN_PROGRAM_ID, systemProgram: SystemProgram.programId })
+        .instruction();
+      tx.add(ix);
+      await program.provider.sendAndConfirm!(tx, [], { skipPreflight: true });
+
+      const backendRes = await fetch(`${API_PREFIX}/platform/update-offers`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orderId: Number(dealIdBn.toString()),  // ulong on server
+          minFiatAmount: minF,
+          maxFiatAmount: maxF,
+        }),
+      });
+     if (!backendRes.ok)
+      throw new Error(await backendRes.text());
+    
+      navigate('/');
+    } catch (err) {
+      console.error(err);
+      alert('Error: ' + err);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const renderStepContent = (step: StepIndex) => {
+    switch (step) {
+      case StepIndex.TYPE:
+        return (
+          <FormControl fullWidth>
+            <InputLabel sx={{ color: 'text.primary' }}>Type</InputLabel>
+            <Select
+              value={type}
+              label="Type"
+              onChange={(e: SelectChangeEvent) => { setType(e.target.value as OrderType); handleNext(); }}
+              sx={{ color: 'text.primary' }}
+            >
+              <MenuItem value="buy">Buy Crypto</MenuItem>
+              <MenuItem value="sell">Sell Crypto</MenuItem>
+            </Select>
+          </FormControl>
         );
 
-        if (!vaultInfo) {
-          tx.add(
-                  createAssociatedTokenAccountInstruction(
-                    wallet,
-                    vaultTokenAccount,
-                    vaultAuthPda,
-                    tok.mint
-                  )
-                );
-          }
+      case StepIndex.ASSET_TO_EXCHANGE:
+        return (
+          <FormControl fullWidth>
+            <InputLabel sx={{ color: 'text.primary' }}>
+              {type === 'sell' ? 'Token to Sell' : 'Crypto to Buy'}
+            </InputLabel>
+            <Select
+              value={token}
+              label={type === 'sell' ? 'Token to Sell' : 'Crypto to Buy'}
+              onChange={(e: SelectChangeEvent) => { setToken(e.target.value as typeof token); handleNext(); }}
+              sx={{ color: 'text.primary' }}
+            >
+              {TOKENS.map(o => <MenuItem key={o.value} value={o.value}>{o.name}</MenuItem>)}
+            </Select>
+          </FormControl>
+        );
 
-          console.log('type:', type);
-          console.log('offerType:', offerType);
-          const ix = await program.methods
-          .initializeOffer(amountBn, tok.mint, fiatCode, priceBn, dealIdBn, offerType)
-          .accounts({
-            escrowAccount: escrowPda,
-            sellerTokenAccount,
-            vaultAccount:   vaultTokenAccount,
-            seller:         wallet,
-            tokenProgram:   TOKEN_PROGRAM_ID,
-            systemProgram:  SystemProgram.programId,
-          })
-          .instruction();
+      case StepIndex.ASSET_TO_RECEIVE:
+        return (
+          <FormControl fullWidth>
+            <InputLabel sx={{ color: 'text.primary' }}>
+              {type === 'sell' ? 'Fiat to Receive' : 'Fiat to Spend'}
+            </InputLabel>
+            <Select
+              value={fiat}
+              label={type === 'sell' ? 'Fiat to Receive' : 'Fiat to Spend'}
+              onChange={(e: SelectChangeEvent) => { setFiat(e.target.value as typeof fiat); handleNext(); }}
+              sx={{ color: 'text.primary' }}
+            >
+              {FIAT.map(o => <MenuItem key={o.value} value={o.value}>{o.name}</MenuItem>)}
+            </Select>
+          </FormControl>
+        );
 
-        tx.add(ix);
-        const sig = await program.provider.sendAndConfirm!(tx, [], {skipPreflight: true});
-        console.log('🎉 initialize_offer tx:', sig);
+      case StepIndex.DETAILS:
+        return (
+          <>
+            {/* Common: amount & price */}
+            <TextField
+              label={`Amount (${TOKENS.find(t => t.value === token)?.name})`}
+              value={amount}
+              onChange={e => setAmount(e.target.value)}
+              fullWidth
+              InputLabelProps={{ style: { color: '#fff' } }}
+              InputProps={{ style: { color: '#fff' } }}
+            />
+            <TextField
+              label={`Price (${fiat})`}
+              value={price}
+              onChange={e => setPrice(e.target.value)}
+              fullWidth
+              InputLabelProps={{ style: { color: '#fff' } }}
+              InputProps={{ style: { color: '#fff' } }}
+            />
+            {/* Range: fiat sum */}
+            <TextField
+              label={`Min Fiat (${fiat})`}
+              value={minFiat}
+              onChange={e => setMinFiat(e.target.value)}
+              fullWidth
+              InputLabelProps={{ style: { color: '#fff' } }}
+              InputProps={{ style: { color: '#fff' } }}
+            />
+            <TextField
+              label={`Max Fiat (${fiat})`}
+              value={maxFiat}
+              onChange={e => setMaxFiat(e.target.value)}
+              fullWidth
+              InputLabelProps={{ style: { color: '#fff' } }}
+              InputProps={{ style: { color: '#fff' } }}
+            />
+          </>
+        );
 
-        navigate('/');
+      default:
+        return null;
     }
-    catch (e) {
-      console.error('Error:', e);
-      alert('Error: ' + e);
-      return;
-    }
-    finally{
-      setIsLoading(false);
+  };
 
-    }
-  }
-  
   return (
-    <div className="create-order-page">
-      <h2 className="primary">📝 Create Order</h2>
-      <form onSubmit={handleSubmit} className="order-form">
+    <ThemeProvider theme={theme}>
+      <Box sx={{ maxWidth: 600, mx: 'auto', mt: 5, p: 4, bgcolor: 'background.paper', borderRadius: 2, boxShadow: 3, color: 'text.primary' }}>
+        <Stepper nonLinear activeStep={activeStep} alternativeLabel>
+          {steps.map((label, index) => (
+            <Step key={label}>
+              <StepButton color="primary" onClick={handleStep(index as StepIndex)}>
+                {label}
+              </StepButton>
+            </Step>
+          ))}
+        </Stepper>
 
-        {/* Type (buy/sell) */}
-        <Dropdown
-          label="Type"
-          value={type}
-          options={[{ name: 'Buy', value: 'buy' }, { name: 'Sell', value: 'sell' }]}
-          onChange={setType}
-        />
-
-        {/* Token */}
-        <Dropdown
-          label="Token"
-          value={token}
-          options={TOKENS.map(t => ({ name: t.name, value: t.value }))}
-          onChange={setToken}
-        />
-
-        {/* Fiat */}
-        <Dropdown
-          label="Fiat"
-          value={fiat}
-          options={FIAT.map(f => ({ name: f.name, value: f.value }))}
-          onChange={setFiat}
-        />
-
-        <label>
-          Amount ({TOKENS.find(t => t.value === token)?.name}):
-          <input
-            type="text"
-            value={amount}
-            onChange={e => /^\d*\.?\d*$/.test(e.target.value) && setAmount(e.target.value)}
-            placeholder="0.00"
-            inputMode="decimal"
-          />
-        </label>
-
-        <label>
-          Price ({fiat}):
-          <input
-            type="text"
-            value={price}
-            onChange={e => /^\d*\.?\d*$/.test(e.target.value) && setPrice(e.target.value)}
-            placeholder="0.00"
-            inputMode="decimal"
-          />
-        </label>
-
-        <button type="submit" className="submit-order-btn">
-          Create
-        </button>
-      </form>
-      
-      {isLoading && (
-        <div className="loader-container">
-          <Loader />
-        </div>
-      )}
-    </div>
+        <Box component={activeStep === StepIndex.DETAILS ? 'form' : 'div'} onSubmit={activeStep === StepIndex.DETAILS ? handleSubmit : undefined} sx={{ mt: 4, display: 'flex', flexDirection: 'column', gap: 2 }}>
+          {renderStepContent(activeStep)}
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
+            <Button variant="outlined" onClick={handleBack} disabled={activeStep === StepIndex.TYPE || isSubmitting} sx={{ color: '#fff', borderColor: '#444' }}>
+              Back
+            </Button>
+            {activeStep < StepIndex.DETAILS ? (
+              <Button variant="contained" onClick={handleNext} disabled={isSubmitting}>
+                Next
+              </Button>
+            ) : (
+              <Button type="submit" variant="contained" disabled={isSubmitting}>
+                {isSubmitting ? <CircularProgress size={24} /> : 'Create'}
+              </Button>
+            )}
+          </Box>
+        </Box>
+      </Box>
+      {isSubmitting && <Loader />}
+    </ThemeProvider>
   );
-}
+};
 
-interface DDProps<T extends string> {
-  label: string;
-  value: T;
-  options: { name: string; value: T }[];
-  onChange: (v: T) => void;
-}
-
-function Dropdown<T extends string>({ label, value, options, onChange }: DDProps<T>) {
-  return (
-    <div className="form-group">
-      <span className="label-text">{label}:</span>
-      <Listbox value={value} onChange={onChange}>
-        <div className="custom-select-wrapper">
-          <ListboxButton className="dropdown-button">
-            {options.find(o => o.value === value)?.name}
-            <svg className="chevron" xmlns="http://www.w3.org/2000/svg" width="20" height="20"><path fill="currentColor" d="M7 10l5 5 5-5H7z"/></svg>
-          </ListboxButton>
-          <ListboxOptions className="dropdown-options">
-            {options.map(o => (
-              <ListboxOption
-                key={o.value}
-                value={o.value}
-                className={({ active }) => `dropdown-option ${active ? 'active' : ''}`}
-              >
-                {o.name}
-              </ListboxOption>
-            ))}
-          </ListboxOptions>
-        </div>
-      </Listbox>
-    </div>
-  );
-}
-export default CreateOrderPage
+export default CreateOrderPage;

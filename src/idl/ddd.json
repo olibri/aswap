@@ -127,6 +127,276 @@
       ]
     },
     {
+      "name": "buyer_sign_partial",
+      "discriminator": [
+        192,
+        124,
+        73,
+        19,
+        122,
+        28,
+        202,
+        92
+      ],
+      "accounts": [
+        {
+          "name": "escrow_account",
+          "writable": true
+        },
+        {
+          "name": "vault_account",
+          "docs": [
+            "CHECKED: KEEPER"
+          ],
+          "writable": true,
+          "relations": [
+            "escrow_account"
+          ]
+        },
+        {
+          "name": "vault_authority",
+          "docs": [
+            "PDA (Vault Authority), яка має право підписувати транзакцію від імені vault_account",
+            "seeds = [\"vault_authority\", escrow_account.key().as_ref()]",
+            "CHECKED: KEEPER"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "escrow_account.parent_offer",
+                "account": "EscrowAccount"
+              }
+            ]
+          }
+        },
+        {
+          "name": "buyer_token_account",
+          "docs": [
+            "CHECKED: KEEPER"
+          ],
+          "writable": true
+        },
+        {
+          "name": "buyer",
+          "docs": [
+            "CHECKED: KEEPER"
+          ],
+          "signer": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": [
+        {
+          "name": "deal_id",
+          "type": "u64"
+        },
+        {
+          "name": "fill_nonce",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "cancel_claim",
+      "discriminator": [
+        179,
+        1,
+        212,
+        49,
+        81,
+        144,
+        221,
+        140
+      ],
+      "accounts": [
+        {
+          "name": "escrow_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119,
+                  95,
+                  111,
+                  102,
+                  102,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "escrow_account.seller",
+                "account": "EscrowAccount"
+              },
+              {
+                "kind": "arg",
+                "path": "deal_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "buyer",
+          "docs": [
+            "CHECKED: KEEPER"
+          ],
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "_deal_id",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "cancel_offer",
+      "discriminator": [
+        92,
+        203,
+        223,
+        40,
+        92,
+        89,
+        53,
+        119
+      ],
+      "accounts": [
+        {
+          "name": "escrow_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119,
+                  95,
+                  111,
+                  102,
+                  102,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "seller"
+              },
+              {
+                "kind": "arg",
+                "path": "deal_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault_account",
+          "writable": true,
+          "relations": [
+            "escrow_account"
+          ]
+        },
+        {
+          "name": "vault_authority",
+          "docs": [
+            "seeds = [\"vault_authority\", escrow_account.key()]",
+            "CHECKED"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "escrow_account"
+              }
+            ]
+          }
+        },
+        {
+          "name": "seller_token_account",
+          "writable": true
+        },
+        {
+          "name": "seller",
+          "docs": [
+            "CHECKED"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": [
+        {
+          "name": "_deal_id",
+          "type": "u64"
+        }
+      ]
+    },
+    {
       "name": "claim_offer",
       "discriminator": [
         23,
@@ -186,6 +456,170 @@
         {
           "name": "_deal_id",
           "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "claim_partial",
+      "discriminator": [
+        173,
+        127,
+        99,
+        213,
+        253,
+        249,
+        86,
+        38
+      ],
+      "accounts": [
+        {
+          "name": "offer",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119,
+                  95,
+                  111,
+                  102,
+                  102,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "offer.seller",
+                "account": "EscrowAccount"
+              },
+              {
+                "kind": "arg",
+                "path": "deal_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "escrow_account",
+          "writable": true
+        },
+        {
+          "name": "vault_account",
+          "writable": true
+        },
+        {
+          "name": "buyer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        },
+        {
+          "name": "deal_id",
+          "type": "u64"
+        },
+        {
+          "name": "fill_nonce",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "force_cancel_fill",
+      "discriminator": [
+        217,
+        2,
+        180,
+        14,
+        235,
+        183,
+        194,
+        75
+      ],
+      "accounts": [
+        {
+          "name": "fill",
+          "writable": true
+        },
+        {
+          "name": "offer",
+          "writable": true
+        },
+        {
+          "name": "vault_account",
+          "writable": true,
+          "relations": [
+            "fill"
+          ]
+        },
+        {
+          "name": "vault_authority",
+          "docs": [
+            "CHECKED"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "fill.parent_offer",
+                "account": "EscrowAccount"
+              }
+            ]
+          }
+        },
+        {
+          "name": "seller_token_account",
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": [
+        {
+          "name": "fill_nonce",
+          "type": "u8"
         }
       ]
     },
@@ -536,6 +970,93 @@
           "type": "u64"
         }
       ]
+    },
+    {
+      "name": "seller_sign_partial",
+      "discriminator": [
+        172,
+        201,
+        98,
+        205,
+        230,
+        139,
+        113,
+        60
+      ],
+      "accounts": [
+        {
+          "name": "escrow_account",
+          "writable": true
+        },
+        {
+          "name": "vault_account",
+          "writable": true,
+          "relations": [
+            "escrow_account"
+          ]
+        },
+        {
+          "name": "vault_authority",
+          "docs": [
+            "CHECKED: PDA authority for vault_account"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "escrow_account.parent_offer",
+                "account": "EscrowAccount"
+              }
+            ]
+          }
+        },
+        {
+          "name": "buyer_token_account",
+          "writable": true
+        },
+        {
+          "name": "seller",
+          "docs": [
+            "CHECK"
+          ],
+          "signer": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": [
+        {
+          "name": "deal_id",
+          "type": "u64"
+        },
+        {
+          "name": "fill_nonce",
+          "type": "u8"
+        }
+      ]
     }
   ],
   "accounts": [
@@ -568,6 +1089,19 @@
       ]
     },
     {
+      "name": "ClaimCanceled",
+      "discriminator": [
+        226,
+        151,
+        214,
+        8,
+        94,
+        237,
+        233,
+        129
+      ]
+    },
+    {
       "name": "EscrowInitialized",
       "discriminator": [
         222,
@@ -581,6 +1115,19 @@
       ]
     },
     {
+      "name": "FillForceCanceled",
+      "discriminator": [
+        151,
+        214,
+        100,
+        53,
+        190,
+        176,
+        100,
+        175
+      ]
+    },
+    {
       "name": "FundsReleased",
       "discriminator": [
         178,
@@ -591,6 +1138,19 @@
         104,
         210,
         210
+      ]
+    },
+    {
+      "name": "OfferCanceled",
+      "discriminator": [
+        22,
+        24,
+        38,
+        160,
+        119,
+        217,
+        227,
+        156
       ]
     },
     {
@@ -648,6 +1208,41 @@
       "code": 6002,
       "name": "AlreadyClaimed",
       "msg": "Ця пропозиція вже має баєра"
+    },
+    {
+      "code": 6003,
+      "name": "AlreadyCanceled",
+      "msg": "Ця пропозиція вже скасована"
+    },
+    {
+      "code": 6004,
+      "name": "AlreadySigned",
+      "msg": "Ця пропозиція вже підписана"
+    },
+    {
+      "code": 6005,
+      "name": "CannotCancel",
+      "msg": "Не можна скасувати"
+    },
+    {
+      "code": 6006,
+      "name": "InsufficientRemaining",
+      "msg": "Not enough remaining amount in offer"
+    },
+    {
+      "code": 6007,
+      "name": "MathOverflow",
+      "msg": "Math overflow"
+    },
+    {
+      "code": 6008,
+      "name": "TimeoutNotReached",
+      "msg": "Timeout not reached yet"
+    },
+    {
+      "code": 6009,
+      "name": "NothingToReturn",
+      "msg": "Nothing to return"
     }
   ],
   "types": [
@@ -663,6 +1258,26 @@
           {
             "name": "deal_id",
             "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ClaimCanceled",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "escrow",
+            "type": "pubkey"
+          },
+          {
+            "name": "buyer",
+            "type": "pubkey"
+          },
+          {
+            "name": "ts",
+            "type": "i64"
           }
         ]
       }
@@ -716,6 +1331,30 @@
           {
             "name": "offer_type",
             "type": "u8"
+          },
+          {
+            "name": "is_canceled",
+            "type": "bool"
+          },
+          {
+            "name": "seller_canceled",
+            "type": "bool"
+          },
+          {
+            "name": "total_amount",
+            "type": "u64"
+          },
+          {
+            "name": "remaining_amount",
+            "type": "u64"
+          },
+          {
+            "name": "parent_offer",
+            "type": "pubkey"
+          },
+          {
+            "name": "start_ts",
+            "type": "i64"
           }
         ]
       }
@@ -770,6 +1409,30 @@
       }
     },
     {
+      "name": "FillForceCanceled",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "parent_offer",
+            "type": "pubkey"
+          },
+          {
+            "name": "fill",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "ts",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
       "name": "FundsReleased",
       "type": {
         "kind": "struct",
@@ -788,6 +1451,30 @@
           },
           {
             "name": "deal_id",
+            "type": "u64"
+          },
+          {
+            "name": "ts",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "OfferCanceled",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "escrow",
+            "type": "pubkey"
+          },
+          {
+            "name": "seller",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
             "type": "u64"
           },
           {
