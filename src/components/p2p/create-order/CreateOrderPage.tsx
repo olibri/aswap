@@ -130,8 +130,12 @@ const CreateOrderPage: React.FC = () => {
         .instruction();
       tx.add(ix);
       
+      const POLLING_INTERVAL_MS = 1000;
+      const MAX_POLLING_ATTEMPTS = 20;
+      
+      const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+      
       const sig: TransactionSignature = await program.provider.sendAndConfirm!(tx, [], { skipPreflight: true });
-
       await program.provider.connection.confirmTransaction(
           {
               signature: sig,
@@ -140,6 +144,29 @@ const CreateOrderPage: React.FC = () => {
           },
           'finalized'
       );
+      async function checkBackendForOrder(orderId: number) {
+        const res = await fetch(`${API_PREFIX}/platform/check-order-status/${orderId}`);
+        if (res.status === 404) return false;
+        if (!res.ok) throw new Error(await res.text());
+        const data = await res.json();
+        return data.isConfirmed === orderId; 
+      }
+
+      let attempts = 0;
+      let backendConfirmed = false;
+
+            
+      while (attempts < MAX_POLLING_ATTEMPTS) {
+        backendConfirmed = await checkBackendForOrder(Number(dealIdBn.toString()));
+        if (backendConfirmed) break;
+
+        attempts++;
+        await delay(POLLING_INTERVAL_MS);
+      }
+
+      if (!backendConfirmed) {
+        throw new Error('Backend did not confirm the transaction in time.');
+      }
       const backendRes = await fetch(`${API_PREFIX}/platform/update-offers`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
