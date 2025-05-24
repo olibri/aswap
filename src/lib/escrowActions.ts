@@ -19,19 +19,9 @@ function pdaFill(offer: PublicKey, buyer: PublicKey, nonce: number, programId: P
   )[0];
 }
 
-function dealIdToBn(id: string | number): anchor.BN {
-  if (typeof id === 'number') return new anchor.BN(id);   // уже число
-
-  // якщо id виглядає як "123456789" — теж ОК
-  if (/^\d+$/.test(id)) return new anchor.BN(id);
-
-  // інакше це UUID → прибираємо дефіси та читаємо як hex
-  const hex = id.replace(/-/g, '');
-  // обрізаємо до 16 байт (u128) або 8 байт (u64) — контракт очікує u64
-  const trimmed = hex.slice(-16);                   // останні 8 байт = 16 hex симв.
-  return new anchor.BN(trimmed, 16);                // base-16
+function dealIdToBn(id: number | string) {
+  return new anchor.BN(id); 
 }
-
 export function useEscrowActions() {
     
   const program = useEscrowProgram();
@@ -49,7 +39,7 @@ export function useEscrowActions() {
    * Only needs the deal-id and seller publicKey we already carry in `EscrowOrderDto`.
    */
   async function claimWhole(order: EscrowOrderDto) {
-    const dealId = dealIdToBn(order.id);
+    const dealId = dealIdToBn(order.dealId);
     const seller = new PublicKey(order.sellerCrypto);
     const escrow = pdaOffer(seller, dealId, program!.programId);
 
@@ -77,7 +67,7 @@ export function useEscrowActions() {
     nonce: number,
   ) {
     const amount  = new anchor.BN(amountRaw);          // u64 on chain
-    const dealId  = dealIdToBn(order.id);
+    const dealId  = dealIdToBn(order.dealId);
     const seller  = new PublicKey(order.sellerCrypto);
     const offerPd = pdaOffer(seller, dealId, program!.programId);
 

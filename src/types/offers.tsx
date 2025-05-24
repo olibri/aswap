@@ -1,6 +1,7 @@
 export interface EscrowOrderDto {
     id: string;
     sellerCrypto: string;
+    dealId: number;          
     buyerFiat?: string | null;
     amount: number;
     price: number;
