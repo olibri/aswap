@@ -24,7 +24,7 @@ import {
   getAssociatedTokenAddress,
   TOKEN_PROGRAM_ID,
 } from '@solana/spl-token';
-import { PublicKey, SystemProgram, Transaction } from '@solana/web3.js';
+import { PublicKey, SystemProgram, Transaction, TransactionSignature } from '@solana/web3.js';
 import Loader from '../../../loader/Loader';
 
 // Palette colors
@@ -129,8 +129,17 @@ const CreateOrderPage: React.FC = () => {
         .accounts({ escrowAccount: escrowPda, sellerTokenAccount: sellerTokenAcc, vaultAccount: vaultTokenAcc, seller: wallet, tokenProgram: TOKEN_PROGRAM_ID, systemProgram: SystemProgram.programId })
         .instruction();
       tx.add(ix);
-      await program.provider.sendAndConfirm!(tx, [], { skipPreflight: true });
+      
+      const sig: TransactionSignature = await program.provider.sendAndConfirm!(tx, [], { skipPreflight: true });
 
+      await program.provider.connection.confirmTransaction(
+          {
+              signature: sig,
+              blockhash: (await program.provider.connection.getLatestBlockhash('finalized')).blockhash,
+              lastValidBlockHeight: (await program.provider.connection.getLatestBlockhash('finalized')).lastValidBlockHeight,
+          },
+          'finalized'
+      );
       const backendRes = await fetch(`${API_PREFIX}/platform/update-offers`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
