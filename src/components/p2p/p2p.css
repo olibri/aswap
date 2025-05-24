@@ -152,3 +152,88 @@ body {
 .swap-btn:hover {
   background-color: #e0dc48;
 }
+
+
+/* ——————————— modal ——————————— */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+.modal {
+  width: 90%;
+  max-width: 420px;
+  background: #1f1f23;
+  border-radius: 16px;
+  padding: 24px 28px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, .4);
+}
+.modal-title {
+  margin: 0 0 8px;
+  font-size: 20px;
+  font-weight: 700;
+}
+.modal-sub {
+  margin: 0 0 20px;
+  font-size: 14px;
+  color: #ccc;
+}
+.modal-btn-full {
+  width: 100%;
+  background: #4caf50;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 0;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 16px;
+}
+.modal-btn-full:hover {
+  background: #45a047;
+}
+.modal-input-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.modal-input {
+  flex: 1;
+  background: #2e3038;
+  border: 1px solid #444;
+  border-radius: 8px;
+  padding: 8px 10px;
+  color: #fff;
+}
+.modal-btn-claim {
+  background: #F3EF52;
+  color: #27292F;
+  border: none;
+  border-radius: 8px;
+  padding: 0 18px;
+  font-weight: 600;
+  cursor: pointer;
+  opacity: 1;
+  transition: opacity 0.2s ease;
+}
+.modal-btn-claim:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.modal-btn-claim:not(:disabled):hover {
+  background: #e0dc48;
+}
+.modal-cancel {
+  display: block;
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: #888;
+  font-size: 14px;
+  cursor: pointer;
+}
+.modal-cancel:hover { color: #aaa; }
