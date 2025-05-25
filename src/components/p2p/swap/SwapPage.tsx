@@ -1,5 +1,4 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { useParams, Link } from 'react-router-dom';
 import {
   Box,
   Button,
@@ -12,6 +11,9 @@ import {
   Avatar,
   useTheme
 } from '@mui/material';
+import { useEscrowActions } from '../../../lib/escrowActions';
+import { EscrowOrderDto } from '../../../types/offers';
+import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 
 const dummyReviews = [
   { user: '0xPaul', rating: 5, comment: 'All smooth!' },
@@ -21,6 +23,8 @@ const dummyReviews = [
 const renderStars = (count: number) => '★'.repeat(count) + '☆'.repeat(5 - count);
 
 const SwapPage: React.FC = () => {
+  const { cancelClaim } = useEscrowActions();
+  const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const [timeLeft, setTimeLeft] = useState(15 * 60);
   const [messages, setMessages] = useState([
@@ -31,6 +35,8 @@ const SwapPage: React.FC = () => {
   const chatRef = useRef<HTMLDivElement>(null);
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
+  const location = useLocation();
+  const order = location.state as EscrowOrderDto | undefined;
 
   useEffect(() => {
     const iv = setInterval(() => setTimeLeft((t) => Math.max(t - 1, 0)), 1000);
@@ -103,7 +109,21 @@ const SwapPage: React.FC = () => {
           <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
             <Typography variant="h6">Chat</Typography>
             <Box>
-              <Button variant="outlined" color="error" sx={{ mr: 1 }}>Cancel</Button>
+              <Button
+                variant="outlined"
+                color="error"
+                onClick={async () => {
+                  if (!order) return;
+                  try {
+                    await cancelClaim(order);          // виклик контракту
+                    navigate('/market-p2p-orders');    // <- редирект
+                  } catch (err) {
+                    console.error(err);
+                  }
+                }}
+              >
+                Cancel
+              </Button>
               <Button variant="contained" sx={{ bgcolor: '#F3EF52', color: '#27292F', '&:hover': { bgcolor: '#e0dc48' } }}>Paid</Button>
             </Box>
           </Box>

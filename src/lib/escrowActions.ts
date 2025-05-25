@@ -32,6 +32,7 @@ export function useEscrowActions() {
     return {
       claimWhole:  async () => Promise.resolve(),
       claimPartial:async () => Promise.resolve(),
+      cancelClaim: async () => Promise.resolve(),
     };
 
   /**
@@ -95,6 +96,22 @@ export function useEscrowActions() {
       .rpc();
   }
 
-  return { claimWhole, claimPartial };
-  
+  async function cancelClaim(order: EscrowOrderDto) {
+    if (!program || !publicKey) return;
+
+    const dealId  = new anchor.BN(order.dealId);              // ← u64 з DTO
+    const seller  = new PublicKey(order.sellerCrypto);        // хто відкрив offer
+    const escrowPda = pdaOffer(seller, dealId, program.programId);
+
+    await program.methods
+      .cancelClaim(dealId)                                    // instruction arg
+      .accounts({
+        escrowAccount: escrowPda,
+        buyer: publicKey,                                     // підписант
+      })
+      .rpc();
+  }
+
+  return { claimWhole, claimPartial, cancelClaim };
+
 }

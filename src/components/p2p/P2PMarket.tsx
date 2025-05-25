@@ -32,7 +32,7 @@ const P2PMarket: React.FC = () => {
     if (!modal) return;
     await claimWhole(modal);
     closeModal();
-    navigate(`/swap/${modal.id}`);
+    navigate(`/swap/${modal.id}`, { state: modal });
   };
 
   const handlePartial = async () => {
@@ -41,7 +41,7 @@ const P2PMarket: React.FC = () => {
     if (isNaN(amt) || amt <= 0 || amt > modal.amount) return;
     await claimPartial(modal, amt, 1); /* TODO: реальний nonce */
     closeModal();
-    navigate(`/swap/${modal.id}`);
+    navigate(`/swap/${modal.id}`, { state: modal });
   };
 
   /* ------- render -------- */
