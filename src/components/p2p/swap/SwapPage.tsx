@@ -1,125 +1,230 @@
-import React, { useState, useEffect } from 'react'
-import { Link, useParams } from 'react-router-dom'
-import './swap.css'
-import SwapChart from './chart/SwapChart'
+import React, { useEffect, useState, useRef } from 'react';
+import { useParams, Link } from 'react-router-dom';
+import {
+  Box,
+  Button,
+  Paper,
+  Typography,
+  TextField,
+  Divider,
+  Stack,
+  Slide,
+  ThemeProvider,
+  createTheme,
+  Avatar,
+} from '@mui/material';
 
 const dummyReviews = [
-  { user: '0xPaul', rating: 5, comment: '🔥 All smooth!' },
-  { user: '0xDima', rating: 2, comment: '😕 Took too long' },
-  { user: '0xLina', rating: 4, comment: 'Good experience' },
-  { user: '0xLina1', rating: 4, comment: '🔥 All smooth!' },
-  { user: '0xfdina', rating: 5, comment: 'Good experience' },
-  { user: '0xLhna', rating: 1, comment: '🔥 Good experience!' },
-  { user: '0xgina', rating: 3, comment: 'Good experience' },
-  { user: '0xfina', rating: 2, comment: '🔥 Good experience!' },
-]
+  { user: '0xPaul', rating: 5, comment: 'All smooth!' },
+  { user: '0xDima', rating: 2, comment: 'Took too long' },
+];
 
-const renderStars = (count: number) => '★'.repeat(count) + '☆'.repeat(5 - count)
+const renderStars = (count: number) => '★'.repeat(count) + '☆'.repeat(5 - count);
+
+const theme = createTheme({
+  palette: {
+    mode: 'dark',
+    background: {
+      default: '#1e1e1e',
+      paper: '#27292F',
+    },
+    primary: {
+      main: '#F3EF52',
+      contrastText: '#27292F',
+    },
+    text: {
+      primary: '#fff',
+      secondary: '#aaa',
+    },
+  },
+});
 
 const SwapPage: React.FC = () => {
-  const { id } = useParams<{ id: string }>()
-  const [timeLeft, setTimeLeft] = useState(15 * 60)
+  const { id } = useParams<{ id: string }>();
+  const [timeLeft, setTimeLeft] = useState(15 * 60);
   const [messages, setMessages] = useState([
     { from: '0xBob', text: 'Привіт! Готовий до оплати?' },
-    { from: 'you', text: 'Так, ще раз перевіряю суму.' },
-  ])
-  const [newMsg, setNewMsg] = useState('')
-
-  const chartData = [
-    { time: '10:00', value: 100 },
-    { time: '10:10', value: 120 },
-    { time: '10:20', value: 105 },
-    { time: '10:30', value: 135 },
-  ]
+    { from: 'you', text: 'Так, перевіряю суму.' },
+  ]);
+  const [newMsg, setNewMsg] = useState('');
+  const chatRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0))
-    }, 1000)
-    return () => clearInterval(interval)
-  }, [])
+    const iv = setInterval(() => setTimeLeft((t) => Math.max(t - 1, 0)), 1000);
+    return () => clearInterval(iv);
+  }, []);
 
-  const formatTime = (seconds: number) =>
-    `${Math.floor(seconds / 60)}:${(seconds % 60).toString().padStart(2, '0')}`
+  useEffect(() => {
+    if (chatRef.current) {
+      chatRef.current.scrollTop = chatRef.current.scrollHeight;
+    }
+  }, [messages]);
+
+  const fmt = (s: number) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`;
 
   const sendMessage = () => {
-    if (newMsg.trim() === '') return
-    setMessages([...messages, { from: 'you', text: newMsg }])
-    setNewMsg('')
-  }
+    if (!newMsg.trim()) return;
+    setMessages((m) => [...m, { from: 'you', text: newMsg }]);
+    setNewMsg('');
+  };
+
+  const shortId = id?.split('-').pop()?.slice(-6);
 
   return (
-    <div className="swap-page">
-      <h2 className="primary"> Swap Order #{id}</h2>
-      <div className="swap-topbar">
-        <div className="pair">
-            USD / SOL
-        </div>
-        <div className="status-block">
-            <div className="status">Status: <b>Waiting for payment</b></div>
-            <div className="timer">⏳ {formatTime(timeLeft)} until timeout</div>
-        </div>
-    </div>
+    <ThemeProvider theme={theme}>
+      <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', color: 'text.primary', p: 3, overflowX: 'hidden' }}>
+        <Paper elevation={3} sx={{ p: 3, mb: 4, borderRadius: 3 }}>
+          <Box display="flex" flexDirection={{ xs: 'column', md: 'row' }} justifyContent="space-between" alignItems="center" gap={2}>
+            <Typography variant="h4" color="primary">Deal #{shortId}</Typography>
+            <Box textAlign={{ xs: 'left', md: 'right' }}>
+              <Typography color="primary" fontWeight={600}>USD / SOL</Typography>
+              <Typography variant="body2">Waiting for payment</Typography>
+              <Typography variant="h6" color="primary">{fmt(timeLeft)} left</Typography>
+            </Box>
+          </Box>
+        </Paper>
 
+        <Box display="grid" gridTemplateColumns={{ lg: '3fr 2fr' }} gap={4} alignItems="stretch">
+          <Paper sx={{ p: 4, borderRadius: 3, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: 500, overflow: 'hidden' }}>
+            <Box>
+              <Box display="flex" alignItems="center" gap={3} mb={3}>
+                <Avatar sx={{ bgcolor: 'primary.main', color: 'primary.contrastText', width: 64, height: 64 }}>U</Avatar>
+                <Box sx={{ overflow: 'hidden' }}>
+                  <Typography variant="h5" color="primary" noWrap>@BobTrader</Typography>
+                  <Typography variant="body2" color="text.secondary">Joined: Jan 2023</Typography>
+                </Box>
+              </Box>
+              <Divider sx={{ mb: 3 }} />
+              <Stack spacing={2} direction="row" useFlexGap sx={{ columnGap: 4, rowGap: 3, flexWrap: 'wrap', p: 2, backgroundColor: '#1e1e1e', borderRadius: 2, boxShadow: 'inset 0 0 0 1px #2e2e2e' }}>
+                <Box flexBasis="calc(50% - 16px)" flexGrow={1} sx={{ p: 2, bgcolor: '#27292F', borderRadius: 2 }}>
+                  <Typography variant="overline" color="text.secondary">Wallet</Typography>
+                  <Typography variant="body1" fontWeight={700} sx={{ wordBreak: 'break-all' }}>FP31f...4cRtJRxf3bbJN1KUbZ</Typography>
+                </Box>
+                <Box flexBasis="calc(50% - 16px)" flexGrow={1} sx={{ p: 2, bgcolor: '#27292F', borderRadius: 2 }}>
+                  <Typography variant="overline" color="text.secondary">Bank</Typography>
+                  <Typography variant="body1" fontWeight={700}>Monobank</Typography>
+                </Box>
+                <Box flexBasis="calc(50% - 16px)" flexGrow={1} sx={{ p: 2, bgcolor: '#27292F', borderRadius: 2 }}>
+                  <Typography variant="overline" color="text.secondary">Rating</Typography>
+                  <Typography variant="body1" fontWeight={700}>4.8 / 5 ({renderStars(5)})</Typography>
+                </Box>
+                <Box flexBasis="calc(50% - 16px)" flexGrow={1} sx={{ p: 2, bgcolor: '#27292F', borderRadius: 2 }}>
+                  <Typography variant="overline" color="text.secondary">Total Volume</Typography>
+                  <Typography variant="body1" fontWeight={700}>$12,450</Typography>
+                </Box>
+                <Box flexBasis="calc(50% - 16px)" flexGrow={1} sx={{ p: 2, bgcolor: '#27292F', borderRadius: 2 }}>
+                  <Typography variant="overline" color="text.secondary">Completed Deals</Typography>
+                  <Typography variant="body1" fontWeight={700}>134</Typography>
+                </Box>
+                <Box flexBasis="calc(50% - 16px)" flexGrow={1} sx={{ p: 2, bgcolor: '#27292F', borderRadius: 2 }}>
+                  <Typography variant="overline" color="text.secondary">Telegram</Typography>
+                  <Typography variant="body1" fontWeight={700} component="a" href="https://t.me/BobTrader" target="_blank" rel="noopener noreferrer" sx={{ color: 'primary.main', textDecoration: 'none', wordBreak: 'break-word', '&:hover': { textDecoration: 'underline' } }}>@BobTrader</Typography>
+                </Box>
+              </Stack>
+            </Box>
+          </Paper>
 
-      <div className="swap-grid">
-        {/* Left Column */}
-            <div className="left-column">
-                <div className="user-info">
-                <div className="username">👤 0xBob <span className="badge">Gold</span></div>
-                <div>Rating: {renderStars(5)} (5.0)</div>
-                <div>Trades: <b>134</b></div>
-                <div>Joined: <b>Nov 2023</b></div>
-                </div>
-            <SwapChart data={chartData} />
+          <Paper sx={{ p: 3, display: 'flex', flexDirection: 'column', height: 500, borderRadius: 3 }}>
+            <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+              <Typography variant="h6" color="primary">Chat</Typography>
+              <Box>
+                <Button variant="outlined" color="error" sx={{ mr: 1 }}>Cancel</Button>
+                <Button variant="contained" color="primary">Paid</Button>
+              </Box>
+            </Box>
+            <Divider sx={{ mb: 2 }} />
+            <Box
+              ref={chatRef}
+              flex={1}
+              sx={{
+                overflowY: 'auto',
+                overflowX: 'hidden',
+                mb: 2,
+                px: 1,
+                pr: 2,
+                '&::-webkit-scrollbar': {
+                  width: '8px',
+                },
+                '&::-webkit-scrollbar-thumb': {
+                  backgroundColor: '#F3EF52',
+                  borderRadius: '4px',
+                },
+                '&::-webkit-scrollbar-track': {
+                  backgroundColor: '#27292F',
+                },
+                scrollBehavior: 'smooth',
+              }}
+            >
+              <Stack spacing={1}>
+                {messages.map((m, i) => (
+                  <Slide key={i} direction={m.from === 'you' ? 'left' : 'right'} in mountOnEnter unmountOnExit appear>
+                    <Box
+                      alignSelf={m.from === 'you' ? 'flex-end' : 'flex-start'}
+                      sx={{
+                        maxWidth: '70%',
+                        p: 2,
+                        borderRadius: 2,
+                        bgcolor: m.from === 'you' ? 'primary.main' : 'background.paper',
+                        color: m.from === 'you' ? 'primary.contrastText' : 'text.primary',
+                        wordBreak: 'break-word',
+                      }}
+                    >
+                      <Typography fontWeight={600}>{m.from}</Typography>
+                      <Typography>{m.text}</Typography>
+                    </Box>
+                  </Slide>
+                ))}
+              </Stack>
+            </Box>
+            <Box display="flex" gap={2}>
+              <TextField
+                variant="outlined"
+                fullWidth
+                placeholder="Type message..."
+                value={newMsg}
+                onChange={(e) => setNewMsg(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
+              />
+              <Button variant="contained" onClick={sendMessage}>Send</Button>
+            </Box>
+          </Paper>
+        </Box>
 
-            </div>
+        <Paper sx={{ p: 3, mt: 6, borderRadius: 3 }}>
+          <Typography variant="h6" color="primary" gutterBottom>Reviews</Typography>
+          <Box display="flex" gap={3} overflow="hidden" flexWrap="wrap">
+            {dummyReviews.map((r, i) => (
+              <Paper
+                key={i}
+                elevation={4}
+                sx={{
+                  p: 2,
+                  width: 200,
+                  borderLeft: '4px solid #F3EF52',
+                  borderRadius: 3,
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+                  transition: 'transform 0.2s',
+                  '&:hover': { transform: 'scale(1.03)' },
+                }}
+              >
+                <Typography
+                  component={Link}
+                  to={`/user/${r.user}`}
+                  color="primary"
+                  fontWeight={600}
+                  sx={{ textDecoration: 'none' }}
+                >
+                  {r.user}
+                </Typography>
+                <Typography color="primary">{renderStars(r.rating)}</Typography>
+                <Typography variant="body2" color="text.secondary">{r.comment}</Typography>
+              </Paper>
+            ))}
+          </Box>
+        </Paper>
+      </Box>
+    </ThemeProvider>
+  );
+};
 
-            <div className="right-column">
-                <div className="section">
-                    <div className="chat-header">
-                    <h3 className="section-title">💬 Chat</h3>
-                    <div className="chat-actions">
-                        <button className="chat-btn danger">Cancel Deal</button>
-                        <button className="chat-btn primary">Mark as Paid</button>
-                    </div>
-                    </div>
-                <div className="chat-box">
-                    {messages.map((msg, idx) => (
-                    <div key={idx} className={`chat-msg ${msg.from === 'you' ? 'me' : 'other'}`}>
-                        <b>{msg.from}:</b> {msg.text}
-                    </div>
-                    ))}
-                </div>
-                <div className="chat-input">
-                    <input
-                    type="text"
-                    value={newMsg}
-                    placeholder="Type message..."
-                    onChange={(e) => setNewMsg(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
-                    />
-                    <button onClick={sendMessage}>Send</button>
-                </div>
-                </div>
-            </div>
-            
-      </div>
-      <div className="section full-width-reviews">
-        <h3 className="section-title">🗣️ Reviews</h3>
-        <div className="review-row">
-        {dummyReviews.map((r, idx) => (
-            <div key={idx} className="review-card">
-            <Link to={`/user/${r.user}`} className="review-link">{r.user}</Link>
-            <div className="review-stars">{renderStars(r.rating)}</div>
-            <div className="review-comment">"{r.comment}"</div>
-            </div>
-        ))}
-        </div>
-    </div>
-
-    </div>
-  )
-}
-
-export default SwapPage
+export default SwapPage;
