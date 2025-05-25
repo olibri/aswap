@@ -12,7 +12,7 @@ function pdaOffer(seller: PublicKey, dealId: anchor.BN, programId: PublicKey) {
   )[0];
 }
 
-function pdaFill(offer: PublicKey, buyer: PublicKey, nonce: number, programId: PublicKey) {
+export function pdaFill(offer: PublicKey, buyer: PublicKey, nonce: number, programId: PublicKey) {
   return PublicKey.findProgramAddressSync(
     [Buffer.from('escrow'), offer.toBuffer(), buyer.toBuffer(), Buffer.from([nonce])],
     programId,
@@ -33,6 +33,7 @@ export function useEscrowActions() {
       claimWhole:  async () => Promise.resolve(),
       claimPartial:async () => Promise.resolve(),
       cancelClaim: async () => Promise.resolve(),
+      cancelFill:  async () => Promise.resolve(),
     };
 
   /**
@@ -44,13 +45,18 @@ export function useEscrowActions() {
     const seller = new PublicKey(order.sellerCrypto);
     const escrow = pdaOffer(seller, dealId, program!.programId);
 
-    await program!.methods
+    const sig = await program!.methods
       .claimOffer(dealId)                           // instruction arg
       .accounts({
         escrowAccount: escrow,
         buyer:         publicKey!,
       })
       .rpc();
+
+        await program!.provider.connection.confirmTransaction(
+          sig,
+          'finalized'
+        );
   }
 
   /**
@@ -76,14 +82,14 @@ export function useEscrowActions() {
     // tip: cache this in your OfferDto in the BE, but this works too
     // ⬇ саме так бачить TS
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const offerAcc = await (program!.account as any)['EscrowAccount'].fetch(
+    const offerAcc = await (program!.account as any).escrowAccount.fetch(
     offerPd
     ) as { vaultAccount: PublicKey };
     const vaultAcc = offerAcc.vaultAccount;
 
     const fillPd  = pdaFill(offerPd, publicKey!, nonce, program!.programId);
 
-    await program!.methods
+    const sig  = await program!.methods
       .claimPartial(amount, dealId, nonce)
       .accounts({
         offer:         offerPd,
@@ -94,10 +100,27 @@ export function useEscrowActions() {
         systemProgram: anchor.web3.SystemProgram.programId,
       })
       .rpc();
+
+    await program!.provider.connection.confirmTransaction(
+      sig,
+      'finalized'
+    );
   }
 
   async function cancelClaim(order: EscrowOrderDto) {
     if (!program || !publicKey) return;
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const acc = await (program!.account as any).escrowAccount.fetch(
+        new PublicKey(order.escrowPda)
+      );
+
+      console.log('⛓  on-chain EscrowAccount:', {
+        buyerPda:      acc.buyer.toBase58(),
+        buyerFrontend: publicKey.toBase58(),
+        buyerSigned:   acc.buyerSigned,
+        isCanceled:    acc.isCanceled,
+      });
 
     const dealId  = new anchor.BN(order.dealId);              // ← u64 з DTO
     const seller  = new PublicKey(order.sellerCrypto);        // хто відкрив offer
@@ -112,6 +135,35 @@ export function useEscrowActions() {
       .rpc();
   }
 
-  return { claimWhole, claimPartial, cancelClaim };
+  async function cancelFill(order: EscrowOrderDto) {
+    if (!program || !publicKey) return;
+
+    
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const acc = await (program!.account as any).escrowAccount.fetch(
+        new PublicKey(order.escrowPda)
+      );
+
+      console.log('⛓  on-chain EscrowAccount:', {
+        buyerPda:      acc.buyer.toBase58(),
+        buyerFrontend: publicKey.toBase58(),
+        buyerSigned:   acc.buyerSigned,
+        isCanceled:    acc.isCanceled,
+      });
+
+    if (!order.parentOffer || !order.fillPda || order.fillNonce == null)
+      throw new Error('not a partial fill');
+
+    await program.methods
+      .buyerCancelFill(new anchor.BN(order.dealId), order.fillNonce)
+      .accounts({
+        escrowAccount: new PublicKey(order.fillPda),
+        parentOffer:   new PublicKey(order.parentOffer),
+        buyer:         publicKey,
+      })
+      .rpc();
+  }
+
+  return { claimWhole, claimPartial, cancelClaim, cancelFill};
 
 }

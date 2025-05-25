@@ -23,7 +23,7 @@ const dummyReviews = [
 const renderStars = (count: number) => '★'.repeat(count) + '☆'.repeat(5 - count);
 
 const SwapPage: React.FC = () => {
-  const { cancelClaim } = useEscrowActions();
+  const { cancelClaim, cancelFill } = useEscrowActions();
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const [timeLeft, setTimeLeft] = useState(15 * 60);
@@ -37,6 +37,10 @@ const SwapPage: React.FC = () => {
   const isDark = theme.palette.mode === 'dark';
   const location = useLocation();
   const order = location.state as EscrowOrderDto | undefined;
+  const isPartial = Boolean(order?.isPartial);
+            
+  const canCancel = order && (!order.buyerSigned);
+  // const meta  = useOrderMeta(order);
 
   useEffect(() => {
     const iv = setInterval(() => setTimeLeft((t) => Math.max(t - 1, 0)), 1000);
@@ -109,21 +113,24 @@ const SwapPage: React.FC = () => {
           <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
             <Typography variant="h6">Chat</Typography>
             <Box>
-              <Button
-                variant="outlined"
-                color="error"
-                onClick={async () => {
-                  if (!order) return;
-                  try {
-                    await cancelClaim(order);          // виклик контракту
-                    navigate('/market-p2p-orders');    // <- редирект
-                  } catch (err) {
-                    console.error(err);
-                  }
-                }}
-              >
-                Cancel
-              </Button>
+                {canCancel && (
+                <Button
+                  variant="outlined"
+                  color="error"
+                  onClick={async () => {
+                    if (!order) return;
+                    try {
+                      if (isPartial) await cancelFill(order);
+                      else await cancelClaim(order);
+                      navigate('/market-p2p-orders');
+                    } catch (err) {
+                      console.error(err);
+                    }
+                  }}
+                >
+                  Cancel
+                </Button>
+              )}
               <Button variant="contained" sx={{ bgcolor: '#F3EF52', color: '#27292F', '&:hover': { bgcolor: '#e0dc48' } }}>Paid</Button>
             </Box>
           </Box>

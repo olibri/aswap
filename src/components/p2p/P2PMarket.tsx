@@ -5,10 +5,14 @@ import { useOffers } from '../../hooks/useOffers';
 import { EscrowOrderDto } from '../../types/offers';
 import { useEscrowActions } from '../../lib/escrowActions';
 import './p2p.css'; // Assuming you have a CSS file for styles
+import { PublicKey } from '@solana/web3.js';
 const TOKENS = [
   { name: 'USDC', mint: 'Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr' },
   { name: 'SOL',  mint: 'So11111111111111111111111111111111111111112' },
 ];
+import { pdaFill } from '../../lib/escrowActions'; // Assuming you have a utility for PDA generation
+import { useWallet } from '@solana/wallet-adapter-react';
+import { useEscrowProgram } from '../../hook/useEscrowProgram';
 
 const P2PMarket: React.FC = () => {
   /* ------- data & actions -------- */
@@ -20,11 +24,11 @@ const P2PMarket: React.FC = () => {
   const [modal, setModal]         = useState<EscrowOrderDto | null>(null);
   const [customAmt, setCustomAmt] = useState('');
   const navigate = useNavigate();
-
+  const { publicKey } = useWallet();
   const filtered = offers.filter(o =>
     filter === 'all' ? true : filter === 'buy' ? o.offerSide === 1 : o.offerSide === 0,
   );
-
+  const program = useEscrowProgram();
   /* ------- handlers -------- */
   const closeModal = () => { setModal(null); setCustomAmt(''); };
 
@@ -32,16 +36,27 @@ const P2PMarket: React.FC = () => {
     if (!modal) return;
     await claimWhole(modal);
     closeModal();
-    navigate(`/swap/${modal.id}`, { state: modal });
+    navigate(`/swap/${modal.id}`, { state: { ...modal, isPartial: false } });
   };
 
   const handlePartial = async () => {
     if (!modal) return;
     const amt = Number(customAmt);
     if (isNaN(amt) || amt <= 0 || amt > modal.amount) return;
+    const fillPda = pdaFill(new PublicKey(modal.escrowPda), publicKey!, 1, program!.programId);
+
     await claimPartial(modal, amt, 1); /* TODO: реальний nonce */
     closeModal();
-    navigate(`/swap/${modal.id}`, { state: modal });
+    
+    navigate(`/swap/${modal.id}`, { 
+      state: {
+        ...modal,
+        isPartial: true,
+        fillNonce: 1,
+        fillPda: fillPda.toBase58(),
+        parentOffer: modal.escrowPda,
+      }
+    });
   };
 
   /* ------- render -------- */

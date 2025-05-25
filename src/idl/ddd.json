@@ -8,6 +8,46 @@
   },
   "instructions": [
     {
+      "name": "buyer_cancel_fill",
+      "discriminator": [
+        128,
+        132,
+        248,
+        149,
+        106,
+        209,
+        31,
+        176
+      ],
+      "accounts": [
+        {
+          "name": "escrow_account",
+          "writable": true
+        },
+        {
+          "name": "parent_offer",
+          "writable": true
+        },
+        {
+          "name": "buyer",
+          "signer": true,
+          "relations": [
+            "escrow_account"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "_deal_id",
+          "type": "u64"
+        },
+        {
+          "name": "_fill_nonce",
+          "type": "u8"
+        }
+      ]
+    },
+    {
       "name": "buyer_sign",
       "discriminator": [
         151,
@@ -1115,6 +1155,19 @@
       ]
     },
     {
+      "name": "FillCanceled",
+      "discriminator": [
+        209,
+        235,
+        134,
+        212,
+        189,
+        155,
+        202,
+        6
+      ]
+    },
+    {
       "name": "FillForceCanceled",
       "discriminator": [
         151,
@@ -1243,6 +1296,11 @@
       "code": 6009,
       "name": "NothingToReturn",
       "msg": "Nothing to return"
+    },
+    {
+      "code": 6010,
+      "name": "InvalidOffer",
+      "msg": "Invalid offer in cancel partial"
     }
   ],
   "types": [
@@ -1399,6 +1457,30 @@
           },
           {
             "name": "deal_id",
+            "type": "u64"
+          },
+          {
+            "name": "ts",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "FillCanceled",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "parent_offer",
+            "type": "pubkey"
+          },
+          {
+            "name": "fill",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
             "type": "u64"
           },
           {
