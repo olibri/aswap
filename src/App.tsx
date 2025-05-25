@@ -11,6 +11,7 @@ import { ConnectionProvider, WalletProvider } from "@solana/wallet-adapter-react
 import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
 import SwapChart from "./components/main-page/swap-chart";
 import Footer from "./components/footer/footer";
+import { ThemeProvider, createTheme } from '@mui/material';
 
 
 function App() {
@@ -35,27 +36,46 @@ function App() {
   const toggleTheme = () => {
     setTheme(prev => (prev === 'dark' ? 'light' : 'dark'))
   }
+  const muiTheme = createTheme({
+    palette: {
+      mode: theme,
+      background: {
+        default: theme === 'dark' ? '#1e1e1e' : '#f9f9f9',
+        paper: theme === 'dark' ? '#27292F' : '#ffffff',
+      },
+      primary: {
+        main: '#F3EF52',
+        contrastText: '#27292F',
+      },
+      text: {
+        primary: theme === 'dark' ? '#ffffff' : '#1e1e1e',
+        secondary: theme === 'dark' ? '#aaa' : '#444',
+      },
+    },
+  });
 
 
   return (
-    <ConnectionProvider endpoint={endpoint}>
-      <WalletProvider  wallets={wallets} autoConnect>
-        <WalletModalProvider>
-          <div className="App">
-            <Header onToggleTheme={toggleTheme} currentTheme={theme} />
-              <main className="AppMain">
-                <Routes>
-                  <Route path="/" element={<SwapChart />} />
-                  <Route path="/market-p2p-orders" element={<P2PMarket />} />
-                  <Route path="/swap/:id" element={<SwapPage />} />
-                  <Route path="/create-order" element={<CreateOrderPage />} />
-                </Routes>
-            </main>
-            <Footer/>
-          </div>
-        </WalletModalProvider>
-      </WalletProvider >
-    </ConnectionProvider>
+    <ThemeProvider theme={muiTheme}>
+      <ConnectionProvider endpoint={endpoint}>
+        <WalletProvider  wallets={wallets} autoConnect>
+          <WalletModalProvider>
+            <div className="App">
+              <Header onToggleTheme={toggleTheme} currentTheme={theme} />
+                <main className="AppMain">
+                  <Routes>
+                    <Route path="/" element={<SwapChart />} />
+                    <Route path="/market-p2p-orders" element={<P2PMarket />} />
+                    <Route path="/swap/:id" element={<SwapPage />} />
+                    <Route path="/create-order" element={<CreateOrderPage />} />
+                  </Routes>
+              </main>
+              <Footer/>
+            </div>
+          </WalletModalProvider>
+        </WalletProvider >
+      </ConnectionProvider>
+    </ThemeProvider>
   );
 }
 
