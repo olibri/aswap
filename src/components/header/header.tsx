@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import "./header.css";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
+import { Link } from "react-router-dom";
 
 type Props = {
   onToggleTheme: () => void;
@@ -30,10 +31,10 @@ const Header: React.FC<Props> = ({ onToggleTheme, currentTheme }) => {
 
       {/* DESKTOP NAV */}
       <nav className="nav desktop">
-        <a href="/market-p2p-orders">Online</a>
-        <a href="#">Offline</a>
-        <a href="#">Swap</a>
-        <a href="#">My orders</a>
+        <Link to="/market-p2p-orders">Online</Link>
+        <Link to="#">Offline</Link>
+        <Link to="#">Swap</Link>
+        <Link to="/my-orders">My orders</Link>
       </nav>
 
       {/* RIGHT SIDE */}
@@ -59,7 +60,7 @@ const Header: React.FC<Props> = ({ onToggleTheme, currentTheme }) => {
         <a href="#" onClick={() => setOpen(false)}>
           Swap
         </a>
-        <a href="#" onClick={() => setOpen(false)}>
+        <a href="/my-orders" onClick={() => setOpen(false)}>
           My orders
         </a>
       </nav>

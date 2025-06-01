@@ -17,7 +17,7 @@ import {
   createTheme,
 } from '@mui/material';
 import { useEscrowProgram } from '../../../hook/useEscrowProgram';
-import { pdaEscrowOffer, pdaVaultAuthority } from '../../../solana/constants';
+import { pdaVaultAuthority, pdaEscrowOffer } from '../../../solana/constants';
 import { BN } from '@coral-xyz/anchor';
 import {
   createAssociatedTokenAccountInstruction,
@@ -111,11 +111,10 @@ const CreateOrderPage: React.FC = () => {
       // On-chain uses exact amount and price
       const amountBn = new BN(Math.round(amountF * 10 ** tok.decimals));
       const priceBn  = new BN(Math.round(priceF * 100));
-      const offerType = type === 'sell' ? { sell: {} } : { buy: {} };
       const wallet = program.provider.publicKey!;
       const dealIdBn = new BN(Date.now());
 
-      const [escrowPda]     = pdaEscrowOffer(wallet, dealIdBn);
+      const [escrowPda] = pdaEscrowOffer(wallet, dealIdBn);
       const [vaultAuthPda]  = pdaVaultAuthority(escrowPda);
       const sellerTokenAcc  = await getAssociatedTokenAddress(tok.mint, wallet);
       const vaultTokenAcc   = await getAssociatedTokenAddress(tok.mint, vaultAuthPda, true);
@@ -123,11 +122,25 @@ const CreateOrderPage: React.FC = () => {
       const tx = new Transaction();
       const vaultInfo = await program.provider.connection.getAccountInfo(vaultTokenAcc);
       if (!vaultInfo) tx.add(createAssociatedTokenAccountInstruction(wallet, vaultTokenAcc, vaultAuthPda, tok.mint));
-
+      const OFFER_TYPE =
+              type === 'sell' ? { sell: {} } : { buy: {} };
       const ix = await program.methods
-        .initializeOffer(amountBn, tok.mint, fiat, priceBn, dealIdBn, offerType)
-        .accounts({ escrowAccount: escrowPda, sellerTokenAccount: sellerTokenAcc, vaultAccount: vaultTokenAcc, seller: wallet, tokenProgram: TOKEN_PROGRAM_ID, systemProgram: SystemProgram.programId })
-        .instruction();
+        .initializeOffer(
+          amountBn,
+          tok.mint,
+          fiat,
+          priceBn,
+          dealIdBn,
+          OFFER_TYPE,
+        )
+        .accounts({
+          escrowAccount:      escrowPda,           // ТЕПЕР вірний PDA
+          sellerTokenAccount: sellerTokenAcc,
+          vaultAccount:       vaultTokenAcc,
+          seller:             wallet,
+          tokenProgram:       TOKEN_PROGRAM_ID,
+          systemProgram:      SystemProgram.programId,
+        }).instruction()
       tx.add(ix);
       
       const POLLING_INTERVAL_MS = 1000;

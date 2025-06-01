@@ -10,13 +10,17 @@ export interface EscrowOrderDto {
     createdAtUtc: string;
     offerSide: 0 | 1; 
     tokenMint: string;
+    isPartial: boolean;
 
     parentOffer?: string;  // Pubkey offer-PDA
     fillPda?:    string;   // Pubkey fill-PDA
     fillNonce?:  number;   // u8
     buyerSigned?: boolean; 
+    sellerSigned?: boolean; 
     escrowPda: string; // Pubkey escrow-PDA
 
-    isPartial: boolean;
+    vault:      string;
+    vaultAuth:  string;
+    buyerAta:   string; 
   }
   

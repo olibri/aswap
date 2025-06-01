@@ -23,7 +23,9 @@ const dummyReviews = [
 const renderStars = (count: number) => '★'.repeat(count) + '☆'.repeat(5 - count);
 
 const SwapPage: React.FC = () => {
-  const { cancelClaim, cancelFill } = useEscrowActions();
+  const { cancelClaim, cancelFill, buyerSign } = useEscrowActions();
+  const [, setRefresh] = useState(0);          
+  const [signing, setSigning] = useState(false);
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const [timeLeft, setTimeLeft] = useState(15 * 60);
@@ -131,7 +133,26 @@ const SwapPage: React.FC = () => {
                   Cancel
                 </Button>
               )}
-              <Button variant="contained" sx={{ bgcolor: '#F3EF52', color: '#27292F', '&:hover': { bgcolor: '#e0dc48' } }}>Paid</Button>
+              <Button variant="contained" sx={{ bgcolor: '#F3EF52', color: '#27292F', '&:hover': { bgcolor: '#e0dc48' } }}
+               disabled={!order || signing || order.buyerSigned}
+               onClick={async () => {
+                console.log('order =', order);
+                if (!order) return;
+                 try {
+                  
+                   setSigning(true);
+                   await buyerSign(order, ()=> {
+                    setRefresh(r => r + 1);
+                   });             
+                   order.buyerSigned = true;           
+                 } catch (e) {
+                   console.error(e);
+                 } finally { setSigning(false); }
+               }}
+              >
+               {signing ? 'Signing…' : 'Paid'}
+              </Button>
+
             </Box>
           </Box>
           <Divider sx={{ mb: 2 }} />
