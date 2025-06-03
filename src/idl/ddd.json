@@ -1,5 +1,5 @@
 {
-  "address": "9LEGQe2obd9UizPkci9zHwrQbF7js5J4p92wn5b83ALN",
+  "address": "BJzJ6hQBpVxoPDUanXRJ1TwyBSN8oiBTnQYL92aEcS1X",
   "metadata": {
     "name": "ddd",
     "version": "0.1.0",
@@ -1631,6 +1631,10 @@
           {
             "name": "start_ts",
             "type": "i64"
+          },
+          {
+            "name": "deal_id",
+            "type": "u64"
           }
         ]
       }
