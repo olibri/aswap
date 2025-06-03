@@ -13,6 +13,7 @@ const TOKENS = [
 import { pdaFill } from '../../lib/escrowActions'; // Assuming you have a utility for PDA generation
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useEscrowProgram } from '../../hook/useEscrowProgram';
+import { EscrowStatus } from '../../lib/escrowStatus';
 
 const P2PMarket: React.FC = () => {
   /* ------- data & actions -------- */
@@ -35,6 +36,24 @@ const P2PMarket: React.FC = () => {
   const handleWhole = async () => {
     if (!modal) return;
     await claimWhole(modal);
+const API_PREFIX = import.meta.env.VITE_API_PREFIX ?? '/api';
+
+    const backendRes = await fetch(`${API_PREFIX}/platform/update-offers`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              orderId: Number(modal.dealId),  // ulong on server
+              status: EscrowStatus.Singing
+            }),
+          });
+        if (!backendRes.ok)
+          throw new Error(await backendRes.text());
+        
+
+  //   await patchOrder({          
+  //   orderId: Number(modal.dealId),
+  //   status:  EscrowStatus.Singing,
+  // });
     closeModal();
     navigate(`/swap/${modal.id}`, { state: { ...modal, isPartial: false } });
   };
@@ -46,6 +65,20 @@ const P2PMarket: React.FC = () => {
     const fillPda = pdaFill(new PublicKey(modal.escrowPda), publicKey!, 1, program!.programId);
 
     await claimPartial(modal, amt, 1); /* TODO: реальний nonce */
+    const API_PREFIX = import.meta.env.VITE_API_PREFIX ?? '/api';
+
+    const backendRes = await fetch(`${API_PREFIX}/platform/update-offers`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orderId: Number(modal.dealId.toString()), // ulong on server
+          status: EscrowStatus.PartiallyOnChain
+        }),
+      });
+     if (!backendRes.ok)
+      throw new Error(await backendRes.text());
+    
+
     closeModal();
     
     navigate(`/swap/${modal.id}`, { 

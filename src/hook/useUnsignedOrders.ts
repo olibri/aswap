@@ -4,8 +4,24 @@ import { useState, useEffect, useCallback } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { utils } from '@coral-xyz/anchor';
 import { useEscrowProgram } from './useEscrowProgram';
+import { PublicKey } from '@solana/web3.js';
+import { pdaFill } from '../lib/escrowActions';
+import { EscrowOrderDto } from '../types/offers';
 
 const bs58 = utils.bytes.bs58;
+const ZERO_PK = new PublicKey(0);
+const isPartial = (acc: any) => !acc.parentOffer.equals(ZERO_PK);
+
+function findNonce(
+  offerPk: PublicKey,
+  buyerPk: PublicKey,
+  fillPk:  PublicKey,
+  programId: PublicKey,
+): number | undefined {
+  for (let n = 0; n < 255; n++) {
+    if (pdaFill(offerPk, buyerPk, n, programId).equals(fillPk)) return n;
+  }
+}
 
 export const useUnsignedOrders = () => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -42,19 +58,63 @@ const makeFilters = useCallback(() => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const accs = await (program!.account as any).escrowAccount.all(makeFilters());
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        
-    // useUnsignedOrders.ts  (тільки одна зміна)
+       
     setOrders(
-      accs
-        .filter((a: any) => (a.account.dealId ?? a.account.deal_id) !== undefined) // ← відсікаємо старі
-        .map((a: any) => ({
-          ...a.account,
-          dealId: (a.account.dealId ?? a.account.deal_id).toString(),      // string
-          escrowPda: a.publicKey,
-          sellerCrypto: a.account.seller.toBase58(),
-          
-        }))
-    );
+  accs
+    // потрібні акаунти: buyer_signed=1 && seller_signed=0
+    .map((a: any) => {
+      const acc = a.account;
+      const dealBn = acc.dealId ?? acc.deal_id;            // BN
+      const fiatBytes   = acc.fiatCode instanceof Uint8Array
+              ? acc.fiatCode
+              : new Uint8Array(acc.fiatCode);        
+
+      const fiatDecoded = new TextDecoder()
+        .decode(fiatBytes)
+        .replace(/\0/g, '');
+
+      const partial = isPartial(acc);
+
+      return {
+        /* ---------- DTO ---------- */
+        id:             crypto.randomUUID(),                // або acc.key
+        dealId:         dealBn.toString(),                  // string
+        sellerCrypto:   acc.seller.toBase58(),
+        amount:         Number(acc.amount),                 // показово
+        price:          Number(acc.price),
+        fiatCode:       fiatDecoded,
+        tokenMint:      acc.tokenMint.toBase58(),
+        offerSide:      acc.offerType,
+        status:         'OnChain',
+        isPartial:      partial,
+        fillNonce:      partial ? findNonce(
+                          acc.parentOffer,
+                          acc.buyer,
+                          a.publicKey,
+                          program.programId) : undefined,
+        parentOffer:    partial ? acc.parentOffer.toBase58() : undefined,
+        fillPda:        partial ? a.publicKey.toBase58()     : undefined,
+
+        /* што потрібно для підпису */
+        escrowPda:      a.publicKey,
+        vault:          acc.vaultAccount.toBase58(),
+        vaultAuth:      '',          // дочитаємо у sellerSign
+        buyerAta:       '',
+      } satisfies Partial<EscrowOrderDto>;
+    })
+);
+
+    // setOrders(
+    //   accs
+    //     .filter((a: any) => (a.account.dealId ?? a.account.deal_id) !== undefined) // ← відсікаємо старі
+    //     .map((a: any) => ({
+    //       ...a.account,
+    //       dealId: (a.account.dealId ?? a.account.deal_id).toString(),      // string
+    //       escrowPda: a.publicKey,
+    //       sellerCrypto: a.account.seller.toBase58(),
+
+    //     }))
+    // );
 
     setLoading(false);
   }, [program, wallet, makeFilters]);

@@ -14,6 +14,8 @@ import {
 import { useEscrowActions } from '../../../lib/escrowActions';
 import { EscrowOrderDto } from '../../../types/offers';
 import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
+import { EscrowStatus } from '../../../lib/escrowStatus';
+const API_PREFIX = import.meta.env.VITE_API_PREFIX ?? '/api';
 
 const dummyReviews = [
   { user: '0xPaul', rating: 5, comment: 'All smooth!' },
@@ -143,7 +145,25 @@ const SwapPage: React.FC = () => {
                    setSigning(true);
                    await buyerSign(order, ()=> {
                     setRefresh(r => r + 1);
-                   });             
+                   });        
+                  const backendRes = await fetch(`${API_PREFIX}/platform/update-offers`, {
+                          method: 'PUT',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            orderId: Number(order.dealId),  // ulong on server
+                            status: EscrowStatus.SignedByOneSide,
+                            buyerFiat: order.fiatCode
+                          }),
+                        });
+                  if (!backendRes.ok)
+                    throw new Error(await backendRes.text());
+                      
+
+                  // await patchOrder({                                    
+                  //   orderId:   Number(order.dealId),
+                  //   status:    EscrowStatus.SignedByOneSide,
+                  //   buyerFiat: order.fiatCode, 
+                  // });
                    order.buyerSigned = true;           
                  } catch (e) {
                    console.error(e);

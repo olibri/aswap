@@ -2,6 +2,7 @@ import React from 'react';
 import { Button, CircularProgress, Paper, Typography, Box } from '@mui/material';
 import { useUnsignedOrders } from '../../hook/useUnsignedOrders';
 import { useEscrowActions } from '../../lib/escrowActions';
+import { EscrowStatus } from '../../lib/escrowStatus';
 
 const MyOrders: React.FC = () => {
   const { loading, orders, forceRefresh } = useUnsignedOrders();
@@ -27,16 +28,27 @@ const MyOrders: React.FC = () => {
           <Button
               disabled={busy === o.escrowPda.toBase58()}
               onClick={async () => {
-                // 👉 лог перед будь-якими асинхронними операціями
-                console.log(
-                  'Release funds →',
-                  'dealId:',   o.dealId,
-                  'escrowPda:', o.escrowPda.toBase58()
-                );
-
+              console.log(
+                'Release funds → dealId', o.dealId,
+                o.isPartial ? `(partial #${o.fillNonce})` : '(full)',
+              );
                 try {
                   setBusy(o.escrowPda.toBase58());
                   await sellerSign(o);
+                  const API_PREFIX = import.meta.env.VITE_API_PREFIX ?? '/api';
+
+                   const backendRes = await fetch(`${API_PREFIX}/platform/update-offers`, {
+                      method: 'PUT',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        orderId: Number(o.dealId),  // ulong on server
+                        status: EscrowStatus.Released,
+                        ...(o.isPartial && { fillNonce:o.fillNonce }),
+                      }),
+                    });
+                  if (!backendRes.ok)
+                    throw new Error(await backendRes.text());
+                  
                   await forceRefresh();
                 } catch (e) {
                   console.error(e);

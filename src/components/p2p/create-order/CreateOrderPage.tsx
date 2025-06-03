@@ -26,6 +26,7 @@ import {
 } from '@solana/spl-token';
 import { PublicKey, SystemProgram, Transaction, TransactionSignature } from '@solana/web3.js';
 import Loader from '../../../loader/Loader';
+import { EscrowStatus } from '../../../lib/escrowStatus';
 
 // Palette colors
 const accentColor = '#F3EF52';
@@ -187,6 +188,7 @@ const CreateOrderPage: React.FC = () => {
           orderId: Number(dealIdBn.toString()),  // ulong on server
           minFiatAmount: minF,
           maxFiatAmount: maxF,
+          status: EscrowStatus.OnChain
         }),
       });
      if (!backendRes.ok)

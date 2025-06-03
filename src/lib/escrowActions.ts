@@ -20,6 +20,7 @@ function pdaOffer(seller: PublicKey, dealId: anchor.BN, programId: PublicKey) {
   )[0];
 }
 
+
 export function pdaFill(offer: PublicKey, buyer: PublicKey, nonce: number, programId: PublicKey) {
   return PublicKey.findProgramAddressSync(
     [Buffer.from('escrow'), offer.toBuffer(), buyer.toBuffer(), Buffer.from([nonce])],
@@ -151,7 +152,7 @@ async function buyerSign(order: EscrowOrderDto, onTx?: (sig: string)=>void) {
   /* ───── далі як було ───── */
   const dealIdBn = new anchor.BN(order.dealId.toString());
   if (order.isPartial && order.fillNonce != null) {
-    await program!.methods
+    const sig = await program!.methods
       .buyerSignPartial(dealIdBn, order.fillNonce)
       .accounts({
         escrowAccount:     new PublicKey(order.fillPda!),
@@ -162,6 +163,9 @@ async function buyerSign(order: EscrowOrderDto, onTx?: (sig: string)=>void) {
         tokenProgram:      TOKEN_PROGRAM_ID,
       })
       .rpc();
+      console.log('✅ buyerSigned tx:', sig);
+      if (onTx) onTx(sig);
+
   } else {
       const escrowOffer = pdaEscrowOffer(
         new PublicKey(order.sellerCrypto),
@@ -223,7 +227,7 @@ async function buyerSign(order: EscrowOrderDto, onTx?: (sig: string)=>void) {
 
     if (order.isPartial && order.fillNonce != null) {
       console.log('sign partial')
-      await program!.methods
+      const sig2 = await program!.methods
         .sellerSignPartial(dealId, order.fillNonce)
         .accounts({
           escrowAccount:    new PublicKey(order.fillPda!),
@@ -234,6 +238,8 @@ async function buyerSign(order: EscrowOrderDto, onTx?: (sig: string)=>void) {
           tokenProgram:     TOKEN_PROGRAM_ID,
         })
         .rpc();
+        console.log('✅ b tx:', sig2);
+
     } else {
       console.log('sign full')
 
@@ -260,7 +266,7 @@ async function buyerSign(order: EscrowOrderDto, onTx?: (sig: string)=>void) {
           tokenProgram:     TOKEN_PROGRAM_ID,
         })
         .rpc();
-        console.log('✅ buyerSigned tx:', sig2);
+        console.log('✅ b tx:', sig2);
     }
   }
 
