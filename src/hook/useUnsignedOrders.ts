@@ -1,9 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // hook/useUnsignedOrders.ts
 import { useState, useEffect, useCallback } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { utils } from '@coral-xyz/anchor';
 import { useEscrowProgram } from './useEscrowProgram';
-
 
 const bs58 = utils.bytes.bs58;
 
@@ -40,9 +40,22 @@ const makeFilters = useCallback(() => {
     setLoading(true);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const accs = await (program!.account as any)['escrowAccount'].all(makeFilters());
+    const accs = await (program!.account as any).escrowAccount.all(makeFilters());
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    setOrders(accs.map((a: { account: any; publicKey: any; }) => ({ ...a.account, escrowPda: a.publicKey })));
+        
+    // useUnsignedOrders.ts  (тільки одна зміна)
+    setOrders(
+      accs
+        .filter((a: any) => (a.account.dealId ?? a.account.deal_id) !== undefined) // ← відсікаємо старі
+        .map((a: any) => ({
+          ...a.account,
+          dealId: (a.account.dealId ?? a.account.deal_id).toString(),      // string
+          escrowPda: a.publicKey,
+          sellerCrypto: a.account.seller.toBase58(),
+          
+        }))
+    );
+
     setLoading(false);
   }, [program, wallet, makeFilters]);
 

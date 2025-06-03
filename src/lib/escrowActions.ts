@@ -11,7 +11,7 @@ import {
 } from '@solana/spl-token';
 import { Buffer } from 'buffer';
 import { pdaEscrowOffer } from '../solana/constants';   
-
+import { BN } from '@coral-xyz/anchor';
 
 function pdaOffer(seller: PublicKey, dealId: anchor.BN, programId: PublicKey) {
   return PublicKey.findProgramAddressSync(
@@ -186,9 +186,43 @@ async function buyerSign(order: EscrowOrderDto, onTx?: (sig: string)=>void) {
 }
 
   async function sellerSign(order: EscrowOrderDto) {
-    const dealId = new anchor.BN(order.dealId);
+      console.log(
+        'sellerSign →',
+        'typeof dealId =', typeof order.dealId,
+        'value =', order.dealId
+      );
+    
+    const dealId = new BN(order.dealId);
+    console.log('--->', dealId);
+
+    if (!order.vault || !order.vaultAuth || !order.buyerAta) {
+        const escrowPk = pdaEscrowOffer(
+          new PublicKey(order.sellerCrypto),
+          dealId,
+        )[0];
+
+        // читаємо акаунт оферу
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const acc: any = await (program!.account as any).escrowAccount.fetch(escrowPk);
+
+        order.vault     = acc.vaultAccount.toBase58();
+        order.vaultAuth = PublicKey.findProgramAddressSync(
+          [Buffer.from('vault_authority'), escrowPk.toBuffer()],
+          program!.programId,
+        )[0].toBase58();
+        order.buyerAta  = (
+          await getAssociatedTokenAddress(
+            acc.tokenMint,
+            acc.buyer,
+            false,
+            TOKEN_PROGRAM_ID,
+          )
+        ).toBase58();
+      }
+
 
     if (order.isPartial && order.fillNonce != null) {
+      console.log('sign partial')
       await program!.methods
         .sellerSignPartial(dealId, order.fillNonce)
         .accounts({
@@ -201,8 +235,19 @@ async function buyerSign(order: EscrowOrderDto, onTx?: (sig: string)=>void) {
         })
         .rpc();
     } else {
+      console.log('sign full')
+
       const seller = new PublicKey(order.sellerCrypto);
       const escrow = pdaEscrowOffer(seller, dealId)[0];
+
+      console.log('sellerSignOffer accounts:', {
+        escrowAccount:    escrow.toBase58(),
+        vaultAccount:     order.vault,
+        vaultAuthority:   order.vaultAuth,
+        buyerTokenAccount:order.buyerAta,
+        seller:           publicKey!.toBase58(),
+        tokenProgram:     TOKEN_PROGRAM_ID.toBase58(),
+      });
 
       const sig2 = await program!.methods
         .sellerSignOffer(dealId)

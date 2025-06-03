@@ -12,6 +12,7 @@ export function pdaEscrowOffer(
   seller: PublicKey,
   dealIdBn: anchor.BN
 ): [PublicKey, number] {
+  
   return PublicKey.findProgramAddressSync(
     [Buffer.from('escrow_offer'), seller.toBuffer(), dealIdBn.toArrayLike(Buffer, 'le', 8)],
     PROGRAM_ID
