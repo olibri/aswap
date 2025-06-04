@@ -164,6 +164,7 @@ async function buyerSign(order: EscrowOrderDto, onTx?: (sig: string)=>void) {
       })
       .rpc();
       console.log('✅ buyerSigned tx:', sig);
+      await dumpFill('after buyerSignPartial', new PublicKey(order.fillPda!));
       if (onTx) onTx(sig);
 
   } else {
@@ -198,22 +199,29 @@ async function buyerSign(order: EscrowOrderDto, onTx?: (sig: string)=>void) {
     
     const dealId = new BN(order.dealId);
     console.log('--->', dealId);
-
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let escrowPk: any;
     if (!order.vault || !order.vaultAuth || !order.buyerAta) {
-        const escrowPk = pdaEscrowOffer(
-          new PublicKey(order.sellerCrypto),
-          dealId,
-        )[0];
+        // const escrowPk = pdaEscrowOffer(
+        //   new PublicKey(order.sellerCrypto),
+        //   dealId,
+        // )[0];
+
+      escrowPk = order.isPartial
+              ? new PublicKey(order.fillPda!)                                           // ← Fill-PDA
+              : pdaEscrowOffer(new PublicKey(order.sellerCrypto), dealId)[0];           
 
         // читаємо акаунт оферу
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const acc: any = await (program!.account as any).escrowAccount.fetch(escrowPk);
 
         order.vault     = acc.vaultAccount.toBase58();
+        const vAuthBase = order.isPartial ? acc.parentOffer : escrowPk;
         order.vaultAuth = PublicKey.findProgramAddressSync(
-          [Buffer.from('vault_authority'), escrowPk.toBuffer()],
+          [Buffer.from('vault_authority'), vAuthBase.toBuffer()],
           program!.programId,
         )[0].toBase58();
+
         order.buyerAta  = (
           await getAssociatedTokenAddress(
             acc.tokenMint,
@@ -226,11 +234,11 @@ async function buyerSign(order: EscrowOrderDto, onTx?: (sig: string)=>void) {
 
 
     if (order.isPartial && order.fillNonce != null) {
-      console.log('sign partial')
+      await dumpFill('before sellerSignPartial', new PublicKey(order.fillPda!));
       const sig2 = await program!.methods
         .sellerSignPartial(dealId, order.fillNonce)
         .accounts({
-          escrowAccount:    new PublicKey(order.fillPda!),
+          escrowAccount:    escrowPk,
           vaultAccount:     new PublicKey(order.vault),
           vaultAuthority:   new PublicKey(order.vaultAuth),
           buyerTokenAccount:new PublicKey(order.buyerAta),
@@ -238,6 +246,26 @@ async function buyerSign(order: EscrowOrderDto, onTx?: (sig: string)=>void) {
           tokenProgram:     TOKEN_PROGRAM_ID,
         })
         .rpc();
+        await program!.provider.connection.confirmTransaction(sig2, 'confirmed');
+
+
+        const [vaultBal, buyerBal] = await Promise.all([
+          program!.provider.connection.getTokenAccountBalance(new PublicKey(order.vault)),
+          program!.provider.connection.getTokenAccountBalance(new PublicKey(order.buyerAta)),
+        ]);
+
+        console.table({
+          seller: order.sellerCrypto,
+          buyer : publicKey!.toBase58(),
+          vault : vaultBal.value.uiAmountString,
+          buyerATA: buyerBal.value.uiAmountString,
+        });
+
+        console.log('[after sellerSignPartial]');
+        console.table({
+          vault:  vaultBal.value.uiAmountString,
+          buyer:  buyerBal.value.uiAmountString,
+        });
         console.log('✅ b tx:', sig2);
 
     } else {
@@ -270,6 +298,18 @@ async function buyerSign(order: EscrowOrderDto, onTx?: (sig: string)=>void) {
     }
   }
 
+  async function dumpFill(label: string, fillPk: PublicKey) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const fill: any = await (program!.account as any).escrowAccount.fetch(fillPk);
+      console.log(`[${label}] fill`, {
+        buyerSigned : fill.buyerSigned,
+        sellerSigned: fill.sellerSigned,
+        amount      : fill.amount.toString(),
+        vault       : fill.vaultAccount.toBase58(),
+        parentOffer : fill.parentOffer.toBase58(),
+      });
+    }
+
   /**
    * Claim *part* of an offer (partial fill).
    *
@@ -284,6 +324,8 @@ async function buyerSign(order: EscrowOrderDto, onTx?: (sig: string)=>void) {
     amountRaw: number,
     nonce: number,
   ) {
+    try {
+    console.log('[claimPartial]  ▶︎ start', { amountRaw, nonce, order });
     const amount  = new anchor.BN(amountRaw);          // u64 on chain
     const dealId  = dealIdToBn(order.dealId);
     const seller  = new PublicKey(order.sellerCrypto);
@@ -298,7 +340,13 @@ async function buyerSign(order: EscrowOrderDto, onTx?: (sig: string)=>void) {
     ) as { vaultAccount: PublicKey };
     const vaultAcc = offerAcc.vaultAccount;
 
+
     const fillPd  = pdaFill(offerPd, publicKey!, nonce, program!.programId);
+    console.log('[claimPartial]  ▶︎ derived PDAs', {
+          offerPda: offerPd.toBase58(),
+          fillPda : fillPd.toBase58(),
+          vaultAcc: vaultAcc.toBase58(),
+        });
 
     const sig  = await program!.methods
       .claimPartial(amount, dealId, nonce)
@@ -311,11 +359,21 @@ async function buyerSign(order: EscrowOrderDto, onTx?: (sig: string)=>void) {
         systemProgram: anchor.web3.SystemProgram.programId,
       })
       .rpc();
+    console.log('[claimPartial]  ✅ tx sent:', sig);
+    const conf = await program!.provider.connection.confirmTransaction(sig, 'finalized');
+    console.log('[claimPartial]  ↳ confirmed:', conf.value);
 
-    await program!.provider.connection.confirmTransaction(
-      sig,
-      'finalized'
-    );
+    await dumpFill('after claimPartial', fillPd);
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    catch(e: any) {
+    console.error('[claimPartial]  ❌ error:', {
+      message : e.message,
+      logs    : e.logs,      
+      stack   : e.stack,
+    });
+    throw e;
+  }
   }
 
   async function cancelClaim(order: EscrowOrderDto) {

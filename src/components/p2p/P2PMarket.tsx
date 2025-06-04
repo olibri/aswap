@@ -6,16 +6,23 @@ import { EscrowOrderDto } from '../../types/offers';
 import { useEscrowActions } from '../../lib/escrowActions';
 import './p2p.css'; // Assuming you have a CSS file for styles
 import { PublicKey } from '@solana/web3.js';
-const TOKENS = [
-  { name: 'USDC', mint: 'Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr' },
-  { name: 'SOL',  mint: 'So11111111111111111111111111111111111111112' },
-];
+
 import { pdaFill } from '../../lib/escrowActions'; // Assuming you have a utility for PDA generation
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useEscrowProgram } from '../../hook/useEscrowProgram';
 import { EscrowStatus } from '../../lib/escrowStatus';
 
+const TOKENS = [
+  { name: 'USDC', mint: 'Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr' },
+  { name: 'SOL',  mint: 'So11111111111111111111111111111111111111112' },
+];
+
+function getDecimals(mint: string) {
+  return mint === 'Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr' ? 6 : 9; // USDC : SOL
+}
+
 const P2PMarket: React.FC = () => {
+  
   /* ------- data & actions -------- */
   const { offers, loading, error } = useOffers(30000);
   const { claimWhole, claimPartial } = useEscrowActions();
@@ -60,11 +67,15 @@ const API_PREFIX = import.meta.env.VITE_API_PREFIX ?? '/api';
 
   const handlePartial = async () => {
     if (!modal) return;
-    const amt = Number(customAmt);
-    if (isNaN(amt) || amt <= 0 || amt > modal.amount) return;
+
+    const amtHuman = Number(customAmt);
+    if (isNaN(amtHuman) || amtHuman <= 0 || amtHuman > modal.amount) return;
+    const dec      = getDecimals(modal.tokenMint);     
+    const amtRaw   = Math.round(amtHuman * 10 ** dec);           
     const fillPda = pdaFill(new PublicKey(modal.escrowPda), publicKey!, 1, program!.programId);
 
-    await claimPartial(modal, amt, 1); /* TODO: реальний nonce */
+    await claimPartial(modal, amtRaw, 1); /* TODO: реальний nonce */
+    setModal(m => m ? { ...m, remainingAmount: m.amount - amtHuman  } : m);
     const API_PREFIX = import.meta.env.VITE_API_PREFIX ?? '/api';
 
     const backendRes = await fetch(`${API_PREFIX}/platform/update-offers`, {
@@ -95,7 +106,7 @@ const API_PREFIX = import.meta.env.VITE_API_PREFIX ?? '/api';
   /* ------- render -------- */
   if (loading) return <p className="p2p-market">Loading…</p>;
   if (error)   return <p className="p2p-market">Error: {error}</p>;
-
+  console.log('[P2PMarket] offers =', offers);      
   return (
     <>
       <section className="p2p-market">
@@ -145,7 +156,7 @@ const API_PREFIX = import.meta.env.VITE_API_PREFIX ?? '/api';
         ) : (
           filtered.map(o => {
             const isBuy  = o.offerSide === 1;
-            const token  = TOKENS.find(t => t.mint === o.tokenMint)?.name ?? 'TOKEN';
+          const token = TOKENS.find(t => t.mint === o.tokenMint)!;
             const seller = o.sellerCrypto
               ? `${o.sellerCrypto.slice(0, 4)}…${o.sellerCrypto.slice(-4)}`
               : 'Unknown';
@@ -155,7 +166,7 @@ const API_PREFIX = import.meta.env.VITE_API_PREFIX ?? '/api';
                 <div className="order-top">
                   <div className="order-title">
                     <span className="side-label">{isBuy ? 'Buy' : 'Sell'}</span>
-                    <span className="amount">{o.amount} {token}</span>
+                    <span className="amount">{o.amount} {token.name}</span>
                   </div>
                   <div className="order-price">Price: {o.price} {o.fiatCode}</div>
                 </div>

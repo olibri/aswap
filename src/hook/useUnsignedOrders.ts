@@ -69,6 +69,7 @@ const makeFilters = useCallback(() => {
               ? acc.fiatCode
               : new Uint8Array(acc.fiatCode);        
 
+
       const fiatDecoded = new TextDecoder()
         .decode(fiatBytes)
         .replace(/\0/g, '');
@@ -77,10 +78,10 @@ const makeFilters = useCallback(() => {
 
       return {
         /* ---------- DTO ---------- */
-        id:             crypto.randomUUID(),                // або acc.key
-        dealId:         dealBn.toString(),                  // string
+        id:             crypto.randomUUID(),
+        dealId:         dealBn.toString(),           
         sellerCrypto:   acc.seller.toBase58(),
-        amount:         Number(acc.amount),                 // показово
+        amount:         Number(acc.amount),                 // показово      
         price:          Number(acc.price),
         fiatCode:       fiatDecoded,
         tokenMint:      acc.tokenMint.toBase58(),
