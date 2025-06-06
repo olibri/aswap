@@ -99,7 +99,7 @@ const P2PMarket: React.FC = () => {
   //   status:  EscrowStatus.Singing,
   // });
     closeModal();
-    navigate(`/swap/${modal.id}`, { state: { ...modal, filledQty, isPartial: false } });
+    navigate(`/swap/${modal.id}`, { state: { ...modal, filledQty, isPartial: false, escrowPda: modal.escrowPda } });
   };
 
   const handlePartial = async () => {
@@ -207,11 +207,11 @@ const P2PMarket: React.FC = () => {
           <div className="modal">
             <h3 className="modal-title">Claim Offer #{modal.id}</h3>
             <p className="modal-sub">Available: {modal.remaining} USDC</p>
-
+          {modal.remaining === modal.amount && (
             <button className="modal-btn-full" onClick={handleWhole}>
               Take the whole amount
             </button>
-
+          )}
             <div className="modal-input-row">
               <input
                 type="number"

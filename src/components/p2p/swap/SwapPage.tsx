@@ -9,12 +9,14 @@ import {
   Stack,
   Slide,
   Avatar,
-  useTheme
+  useTheme,
+  Modal
 } from '@mui/material';
 import { useEscrowActions } from '../../../lib/escrowActions';
 import { EscrowOrderDto } from '../../../types/offers';
 import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { EscrowStatus } from '../../../lib/escrowStatus';
+import { useEscrowWatcher } from '../../../hook/useEscrowWatcher';
 const API_PREFIX = import.meta.env.VITE_API_PREFIX ?? '/api';
 
 const dummyReviews = [
@@ -47,7 +49,13 @@ const SwapPage: React.FC = () => {
   parentOffer?: string;
 });
   const isPartial = Boolean(order?.isPartial);
-            
+  const escrowPk = order.isPartial ? order.fillPda ?? order.escrowPda : order.escrowPda;      
+  const [showDone, setShowDone] = useState(false);
+
+  useEscrowWatcher({
+      escrowPk,
+      onReleased: () => setShowDone(true),
+    });
   const canCancel = order && (!order.buyerSigned);
   // const meta  = useOrderMeta(order);
 
@@ -73,6 +81,7 @@ const SwapPage: React.FC = () => {
   const shortId = id?.split('-').pop()?.slice(-6);
 
   return (
+    
     <Box sx={{ minHeight: '100vh', bgcolor: theme.palette.background.default, color: theme.palette.text.primary, p: 3, overflowX: 'hidden' }}>
       <Paper elevation={3} sx={{ p: 3, mb: 4, borderRadius: 3, bgcolor: theme.palette.background.paper }}>
         <Box display="flex" flexDirection={{ xs: 'column', md: 'row' }} justifyContent="space-between" alignItems="center" gap={2}>
@@ -257,6 +266,37 @@ const SwapPage: React.FC = () => {
           ))}
         </Box>
       </Paper>
+    {showDone && (
+      <Modal open onClose={() => setShowDone(false)}>
+        <Paper
+          sx={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            p: 4,
+            minWidth: 300,
+            textAlign: 'center',
+          }}
+        >
+          <Typography variant="h5" gutterBottom>
+            Funds Released ✅
+          </Typography>
+          <Typography sx={{ mb: 3 }}>
+            Seller has signed. Tokens are now in your wallet.
+          </Typography>
+          <Button
+            variant="contained"
+            onClick={() => {
+              setShowDone(false);
+              navigate('/market-p2p-orders');
+            }}
+          >
+            Back to Market
+          </Button>
+        </Paper>
+      </Modal>
+    )}
     </Box>
   );
 };
