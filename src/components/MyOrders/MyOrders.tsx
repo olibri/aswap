@@ -3,6 +3,7 @@ import { Button, CircularProgress, Paper, Typography, Box } from '@mui/material'
 import { useUnsignedOrders } from '../../hook/useUnsignedOrders';
 import { useEscrowActions } from '../../lib/escrowActions';
 import { EscrowStatus } from '../../lib/escrowStatus';
+// import { EscrowStatus } from '../../lib/escrowStatus';
 
 const MyOrders: React.FC = () => {
   const { loading, orders, forceRefresh } = useUnsignedOrders();
@@ -42,7 +43,7 @@ const MyOrders: React.FC = () => {
                       headers: { 'Content-Type': 'application/json' },
                       body: JSON.stringify({
                         orderId: Number(o.dealId),  // ulong on server
-                        status: EscrowStatus.Released,
+                        status: EscrowStatus.PartiallyOnChain,
                         ...(o.isPartial && { fillNonce:o.fillNonce }),
                       }),
                     });

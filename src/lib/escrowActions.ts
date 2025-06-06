@@ -274,6 +274,8 @@ async function buyerSign(order: EscrowOrderDto, onTx?: (sig: string)=>void) {
       const seller = new PublicKey(order.sellerCrypto);
       const escrow = pdaEscrowOffer(seller, dealId)[0];
 
+
+
       console.log('sellerSignOffer accounts:', {
         escrowAccount:    escrow.toBase58(),
         vaultAccount:     order.vault,

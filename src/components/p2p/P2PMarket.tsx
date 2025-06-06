@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Scale } from 'lucide-react';
@@ -8,28 +9,28 @@ import './p2p.css'; // Assuming you have a CSS file for styles
 import { PublicKey } from '@solana/web3.js';
 
 import { pdaFill } from '../../lib/escrowActions'; // Assuming you have a utility for PDA generation
-import { useWallet } from '@solana/wallet-adapter-react';
+import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { useEscrowProgram } from '../../hook/useEscrowProgram';
 import { EscrowStatus } from '../../lib/escrowStatus';
-
-const TOKENS = [
-  { name: 'USDC', mint: 'Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr' },
-  { name: 'SOL',  mint: 'So11111111111111111111111111111111111111112' },
-];
+import OrderCard from './swap/OrderCard';
+import { logTokenBalance, } from './swap/zz';
+import { USDC_MINT } from '../../solana/constants';
+import { getAssociatedTokenAddress } from '@solana/spl-token';
 
 function getDecimals(mint: string) {
   return mint === 'Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr' ? 6 : 9; // USDC : SOL
 }
 
+
+
 const P2PMarket: React.FC = () => {
-  
+  const { connection } = useConnection();
   /* ------- data & actions -------- */
   const { offers, loading, error } = useOffers(30000);
   const { claimWhole, claimPartial } = useEscrowActions();
-
   /* ------- ui state -------- */
   const [filter, setFilter]       = useState<'all' | 'buy' | 'sell'>('all');
-  const [modal, setModal]         = useState<EscrowOrderDto | null>(null);
+  const [modal, setModal] = useState<null | (EscrowOrderDto & { remaining: number })>(null); 
   const [customAmt, setCustomAmt] = useState('');
   const navigate = useNavigate();
   const { publicKey } = useWallet();
@@ -37,20 +38,56 @@ const P2PMarket: React.FC = () => {
     filter === 'all' ? true : filter === 'buy' ? o.offerSide === 1 : o.offerSide === 0,
   );
   const program = useEscrowProgram();
+
   /* ------- handlers -------- */
   const closeModal = () => { setModal(null); setCustomAmt(''); };
 
+  async function freeNonce(offerPk: PublicKey) {
+    for (let n = 0; n < 255; n++) {
+      const pda = pdaFill(offerPk, publicKey!, n, program!.programId);
+      const info = await connection.getAccountInfo(pda);
+      if (!info) return { nonce: n, pda };
+    }
+    throw new Error('no free nonce');
+  }
+
+
   const handleWhole = async () => {
     if (!modal) return;
+    let updatedModal = modal;
+    if (!modal.vault) {
+      const acc: any = await (program!.account as any).escrowAccount.fetch(modal.escrowPda);
+       updatedModal = { ...modal, vault: acc.vaultAccount.toBase58() };
+      setModal(updatedModal);                      
+    }
+    console.log('[DEBUG] modal.vault =', updatedModal.vault);
+    console.log('[DEBUG] modal.remaining =', modal.remaining);
+
+    const buyerAta = await getAssociatedTokenAddress(
+        new PublicKey(modal.tokenMint),
+        new PublicKey(modal.sellerCrypto)
+      );
+
+    const filledQty = modal.remaining ?? modal.amount;    
+    await logTokenBalance(connection, modal.vault, 'vault before sign');       // ①
+    await logTokenBalance(connection, buyerAta.toBase58(),   'buyer ATA before sign');
+      console.log(
+        '%c[DEBUG] will transfer:',
+        'color:lime',
+        filledQty,
+        modal.tokenMint === USDC_MINT.toBase58()  ? 'USDC' : 'SOL'
+      );
+
     await claimWhole(modal);
-const API_PREFIX = import.meta.env.VITE_API_PREFIX ?? '/api';
+    const API_PREFIX = import.meta.env.VITE_API_PREFIX ?? '/api';
 
     const backendRes = await fetch(`${API_PREFIX}/platform/update-offers`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               orderId: Number(modal.dealId),  // ulong on server
-              status: EscrowStatus.Singing
+              status: EscrowStatus.Singing,
+              filledQuantity: filledQty,
             }),
           });
         if (!backendRes.ok)
@@ -62,7 +99,7 @@ const API_PREFIX = import.meta.env.VITE_API_PREFIX ?? '/api';
   //   status:  EscrowStatus.Singing,
   // });
     closeModal();
-    navigate(`/swap/${modal.id}`, { state: { ...modal, isPartial: false } });
+    navigate(`/swap/${modal.id}`, { state: { ...modal, filledQty, isPartial: false } });
   };
 
   const handlePartial = async () => {
@@ -72,10 +109,12 @@ const API_PREFIX = import.meta.env.VITE_API_PREFIX ?? '/api';
     if (isNaN(amtHuman) || amtHuman <= 0 || amtHuman > modal.amount) return;
     const dec      = getDecimals(modal.tokenMint);     
     const amtRaw   = Math.round(amtHuman * 10 ** dec);           
-    const fillPda = pdaFill(new PublicKey(modal.escrowPda), publicKey!, 1, program!.programId);
+    // const fillPda = pdaFill(new PublicKey(modal.escrowPda), publicKey!, 1, program!.programId);
+    const { nonce, pda: fillPda } = await freeNonce(new PublicKey(modal.escrowPda));
+    await claimPartial(modal, amtRaw, nonce);
 
-    await claimPartial(modal, amtRaw, 1); /* TODO: реальний nonce */
-    setModal(m => m ? { ...m, remainingAmount: m.amount - amtHuman  } : m);
+    
+    setModal(m => m ? { ...m, fillNonce: nonce, fillPda: fillPda.toBase58(), isPartial: true } : m);
     const API_PREFIX = import.meta.env.VITE_API_PREFIX ?? '/api';
 
     const backendRes = await fetch(`${API_PREFIX}/platform/update-offers`, {
@@ -83,7 +122,8 @@ const API_PREFIX = import.meta.env.VITE_API_PREFIX ?? '/api';
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           orderId: Number(modal.dealId.toString()), // ulong on server
-          status: EscrowStatus.PartiallyOnChain
+          status: EscrowStatus.PartiallyOnChain,
+          filledQuantity: amtHuman
         }),
       });
      if (!backendRes.ok)
@@ -96,7 +136,8 @@ const API_PREFIX = import.meta.env.VITE_API_PREFIX ?? '/api';
       state: {
         ...modal,
         isPartial: true,
-        fillNonce: 1,
+        filledAmount: amtHuman,
+        fillNonce: nonce,
         fillPda: fillPda.toBase58(),
         parentOffer: modal.escrowPda,
       }
@@ -121,7 +162,6 @@ const API_PREFIX = import.meta.env.VITE_API_PREFIX ?? '/api';
           </button>
         </div>
 
-        {/* Filters */}
         <div className="filter-bar">
           <div className="filter-buttons">
             {(['all', 'buy', 'sell'] as const).map(t => (
@@ -154,30 +194,10 @@ const API_PREFIX = import.meta.env.VITE_API_PREFIX ?? '/api';
             No offers found for this filter.
           </p>
         ) : (
-          filtered.map(o => {
-            const isBuy  = o.offerSide === 1;
-          const token = TOKENS.find(t => t.mint === o.tokenMint)!;
-            const seller = o.sellerCrypto
-              ? `${o.sellerCrypto.slice(0, 4)}…${o.sellerCrypto.slice(-4)}`
-              : 'Unknown';
-
-            return (
-              <div key={o.id} className={`p2p-order-card ${isBuy ? 'buy' : 'sell'}`}>
-                <div className="order-top">
-                  <div className="order-title">
-                    <span className="side-label">{isBuy ? 'Buy' : 'Sell'}</span>
-                    <span className="amount">{o.amount} {token.name}</span>
-                  </div>
-                  <div className="order-price">Price: {o.price} {o.fiatCode}</div>
-                </div>
-
-                <div className="order-footer">
-                  <span className="seller">From: {seller}</span>
-                  <button className="swap-btn" onClick={() => setModal(o)}>Swap</button>
-                </div>
-              </div>
-            );
-          })
+          filtered.map(o => (
+            <OrderCard key={o.id} order={o}
+            onSwap={(ord, remaining) => setModal({ ...ord, remaining })} />
+          ))
         )}
       </section>
 
@@ -186,7 +206,7 @@ const API_PREFIX = import.meta.env.VITE_API_PREFIX ?? '/api';
         <div className="modal-overlay">
           <div className="modal">
             <h3 className="modal-title">Claim Offer #{modal.id}</h3>
-            <p className="modal-sub">Available: {modal.amount} USDC</p>
+            <p className="modal-sub">Available: {modal.remaining} USDC</p>
 
             <button className="modal-btn-full" onClick={handleWhole}>
               Take the whole amount

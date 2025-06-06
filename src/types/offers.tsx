@@ -4,6 +4,8 @@ export interface EscrowOrderDto {
     dealId: string;          
     buyerFiat?: string | null;
     amount: number;
+    filledAmount: number;
+    remaining: number;          
     price: number;
     fiatCode: string;
     status: 'PendingOnChain' | 'OnChain' | 'Released' | 'Cancelled';

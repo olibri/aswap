@@ -40,7 +40,12 @@ const SwapPage: React.FC = () => {
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
   const location = useLocation();
-  const order = location.state as EscrowOrderDto | undefined;
+  const order = location.state as (EscrowOrderDto & {
+  isPartial: boolean;
+  fillNonce?: number;
+  fillPda?: string;
+  parentOffer?: string;
+});
   const isPartial = Boolean(order?.isPartial);
             
   const canCancel = order && (!order.buyerSigned);
@@ -141,7 +146,7 @@ const SwapPage: React.FC = () => {
                 console.log('order =', order);
                 if (!order) return;
                  try {
-                  
+                    
                    setSigning(true);
                    await buyerSign(order, ()=> {
                     setRefresh(r => r + 1);
@@ -152,18 +157,13 @@ const SwapPage: React.FC = () => {
                           body: JSON.stringify({
                             orderId: Number(order.dealId),  // ulong on server
                             status: EscrowStatus.SignedByOneSide,
+                            filledQuantity: order.filledAmount,
                             buyerFiat: order.fiatCode
                           }),
                         });
                   if (!backendRes.ok)
                     throw new Error(await backendRes.text());
-                      
 
-                  // await patchOrder({                                    
-                  //   orderId:   Number(order.dealId),
-                  //   status:    EscrowStatus.SignedByOneSide,
-                  //   buyerFiat: order.fiatCode, 
-                  // });
                    order.buyerSigned = true;           
                  } catch (e) {
                    console.error(e);
