@@ -27,7 +27,7 @@ const P2PMarket: React.FC = () => {
   const { connection } = useConnection();
   /* ------- data & actions -------- */
   const { offers, loading, error } = useOffers(30000);
-  const { claimWhole, claimPartial } = useEscrowActions();
+  const { claimWhole, claimPartial, lockEscrow } = useEscrowActions();
   /* ------- ui state -------- */
   const [filter, setFilter]       = useState<'all' | 'buy' | 'sell'>('all');
   const [modal, setModal] = useState<null | (EscrowOrderDto & { remaining: number })>(null); 
@@ -143,6 +143,43 @@ const P2PMarket: React.FC = () => {
       }
     });
   };
+  const handleLock = async () => {
+    if (!modal) return;
+    const amt = Number(customAmt);
+    if (isNaN(amt) || amt <= 0) return;
+
+    try {
+      await lockEscrow(modal, amt);
+
+      // const API_PREFIX = import.meta.env.VITE_API_PREFIX ?? '/api';
+      // await fetch(`${API_PREFIX}/platform/update-offers`, {
+      //   method : 'PUT',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body   : JSON.stringify({
+      //     orderId      : Number(modal.dealId),
+      //     escrowPda    : modal.escrowPda,      // lockEscrow записав у DTO
+      //     sellerCrypto : modal.sellerCrypto,
+      //     amount       : amt,
+      //     status       : EscrowStatus.OnChain,
+      //   }),
+      // });
+
+      navigate(`/swap/${modal.id}`, {
+        state: {
+          ...modal,
+          amount      : amt,
+          remaining   : amt,
+          isPartial   : false,
+          escrowPda   : modal.escrowPda, 
+        },
+      });
+      closeModal();
+    } catch (e) {
+      console.error(e);
+      alert((e as Error).message);
+    }
+  };
+
 
   /* ------- render -------- */
   if (loading) return <p className="p2p-market">Loading…</p>;
@@ -205,34 +242,64 @@ const P2PMarket: React.FC = () => {
       {modal && (
         <div className="modal-overlay">
           <div className="modal">
-            <h3 className="modal-title">Claim Offer #{modal.id}</h3>
-            <p className="modal-sub">Available: {modal.remaining} USDC</p>
-          {modal.remaining === modal.amount && (
-            <button className="modal-btn-full" onClick={handleWhole}>
-              Take the whole amount
-            </button>
-          )}
-            <div className="modal-input-row">
-              <input
-                type="number"
-                placeholder="Custom amount"
-                value={customAmt}
-                onChange={e => setCustomAmt(e.currentTarget.value)}
-                className="modal-input"
-              />
-              <button
-                className="modal-btn-claim"
-                disabled={!customAmt}
-                onClick={handlePartial}
-              >
-                Claim
-              </button>
-            </div>
+            {/* ───────── BUY-request (escrowPda == null) ───────── */}
+            {modal.escrowPda === null ? (
+              <>
+                <h3 className="modal-title">Lock USDC for deal #{modal.id}</h3>
 
-            <button className="modal-cancel" onClick={closeModal}>Cancel</button>
+                <input
+                  type="number"
+                  placeholder="Amount to lock"
+                  value={customAmt}
+                  onChange={e => setCustomAmt(e.currentTarget.value)}
+                  className="modal-input"
+                />
+                <button
+                  className="modal-btn-claim"
+                  disabled={!customAmt}
+                  onClick={handleLock}
+                >
+                  Lock&nbsp;USDC
+                </button>
+
+                <button className="modal-cancel" onClick={closeModal}>Cancel</button>
+              </>
+            ) : (
+            /* ───────── старий UI для claim (sell-offer) ───────── */
+              <>
+                <h3 className="modal-title">Claim Offer #{modal.id}</h3>
+                <p className="modal-sub">Available: {modal.remaining} USDC</p>
+
+                {modal.remaining === modal.amount && (
+                  <button className="modal-btn-full" onClick={handleWhole}>
+                    Take the whole amount
+                  </button>
+                )}
+
+                <div className="modal-input-row">
+                  <input
+                    type="number"
+                    placeholder="Custom amount"
+                    value={customAmt}
+                    onChange={e => setCustomAmt(e.currentTarget.value)}
+                    className="modal-input"
+                  />
+                  <button
+                    className="modal-btn-claim"
+                    disabled={!customAmt}
+                    onClick={handlePartial}
+                  >
+                    Claim
+                  </button>
+                </div>
+
+                <button className="modal-cancel" onClick={closeModal}>Cancel</button>
+              </>
+            )}
           </div>
         </div>
       )}
+
     </>
   );
 };

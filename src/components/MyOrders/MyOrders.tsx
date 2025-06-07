@@ -1,76 +1,55 @@
-import React from 'react';
-import { Button, CircularProgress, Paper, Typography, Box } from '@mui/material';
+import { useBuyerPendingOrders } from '../../hook/useBuyerPendingOrders';
 import { useUnsignedOrders } from '../../hook/useUnsignedOrders';
 import { useEscrowActions } from '../../lib/escrowActions';
-import { EscrowStatus } from '../../lib/escrowStatus';
-// import { EscrowStatus } from '../../lib/escrowStatus';
+import { Button, Box, Paper, Typography, CircularProgress } from '@mui/material';
 
 const MyOrders: React.FC = () => {
   const { loading, orders, forceRefresh } = useUnsignedOrders();
-  const { sellerSign } = useEscrowActions();   // ← у вас уже є
-  const [busy, setBusy] = React.useState<string>();
+  const { sellerSign, buyerSign } = useEscrowActions();
 
-  if (loading) return <CircularProgress />;
-  if (!orders.length) return <Typography>Ордерів, де потрібен ваш підпис, немає.</Typography>;
+  const { loading: loadB, orders: buyerOrders, refresh } = useBuyerPendingOrders();
+
+  if (loading || loadB) return <CircularProgress />;
 
   return (
-    <Box display="flex" flexDirection="column" gap={3}>
-      {orders.map(o => (
-        <Paper key={o.escrowPda.toBase58()} sx={{ p:3, display:'flex', justifyContent:'space-between' }}>
-          <Box>
-            <Typography>
-              Deal # {o.dealId}
-            </Typography>
-
-            <Typography variant="body2">
-              You seller 
-            </Typography>
-          </Box>
-          <Button
-              disabled={busy === o.escrowPda.toBase58()}
-              onClick={async () => {
-              console.log(
-                'Release funds → dealId', o.dealId,
-                o.isPartial ? `(partial #${o.fillNonce})` : '(full)',
-              );
-                try {
-                  setBusy(o.escrowPda.toBase58());
-                  await sellerSign(o);
-                  const API_PREFIX = import.meta.env.VITE_API_PREFIX ?? '/api';
-
-                   const backendRes = await fetch(`${API_PREFIX}/platform/update-offers`, {
-                      method: 'PUT',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({
-                        orderId: Number(o.dealId),  // ulong on server
-                        status: EscrowStatus.PartiallyOnChain,
-                        ...(o.isPartial && { fillNonce:o.fillNonce }),
-                      }),
-                    });
-                  if (!backendRes.ok)
-                    throw new Error(await backendRes.text());
-                  
-                  await forceRefresh();
-                } catch (e) {
-                  console.error(e);
-                  alert((e as Error).message);
-                } finally {
-                  setBusy(undefined);
-                }
-              }}
-            >
-              {busy === o.escrowPda.toBase58() ? (
-                <CircularProgress size={20} />
-              ) : (
-                'Release funds'
-              )}
+    <Box display="flex" flexDirection="column" gap={6}>
+      <Typography variant="h6">Your sells – awaiting release</Typography>
+      {orders.length === 0 ? (
+        <Typography>Нічого не чекає вашого підпису.</Typography>
+      ) : (
+        orders.map(o => (
+          <Paper key={o.escrowPda.toBase58()} sx={{ p: 3, display: 'flex', justifyContent: 'space-between' }}>
+            <Box>
+              <Typography>Deal #{o.dealId}</Typography>
+              <Typography variant="body2">You seller</Typography>
+            </Box>
+            <Button onClick={async () => { await sellerSign(o); await forceRefresh(); }}>
+              Release funds
             </Button>
+          </Paper>
+        ))
+      )}
 
-        </Paper>
-      ))}
+      <Typography variant="h6" sx={{ mt: 4 }}>Your buys – awaiting payment</Typography>
+      {buyerOrders.length === 0 ? (
+        <Typography>Оплатити нічого.</Typography>
+      ) : (
+        buyerOrders.map(o => (
+          <Paper key={o.escrowPda.toBase58()} sx={{ p: 3, display: 'flex', justifyContent: 'space-between' }}>
+            <Box>
+              <Typography>Deal #{o.dealId}</Typography>
+              <Typography variant="body2">You buyer</Typography>
+            </Box>
+            <Button onClick={async () => { await buyerSign(o); await refresh(); }}>
+              Paid
+            </Button>
+          </Paper>
+        ))
+      )}
     </Box>
   );
 };
+
 
 
 export default MyOrders;

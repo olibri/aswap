@@ -1,11 +1,7 @@
-/* components/OrderCard.tsx
-   Повністю готовий компонент картки з on-chain залишком */
-
 import React, { useMemo } from 'react';
 import { EscrowOrderDto } from '../../../types/offers';
 import { useOnChainOrder } from '../../../hook/useOnChainOrder';
 
-/* —­­­­­­­­­­­­­­­­­­­­­­­­­­­­­­­­­­­­­­­­­­­­­­ util/константи — */
 const TOKENS = [
   { name: 'USDC', mint: 'Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr', decimals: 6 },
   { name: 'SOL',  mint: 'So11111111111111111111111111111111111111112', decimals: 9 },
@@ -13,23 +9,55 @@ const TOKENS = [
 
 const getDecimals = (mint: string) =>
   TOKENS.find(t => t.mint === mint)?.decimals ?? 9;
-/* —­­­­­­­­­­­­­­­­­­­­­­­­­­­­­­­­­­­­­­­­­­­­­­ — */
 
 interface Props {
   order:  EscrowOrderDto;
-  onSwap?: (o: EscrowOrderDto, remaining: number) => void;     // клік «Swap» (опціонально)
+  onSwap?: (o: EscrowOrderDto, remaining: number) => void;
 }
 
 export const OrderCard: React.FC<Props> = ({ order, onSwap }) => {
-  /* он-chain метадані акаунта */
   const { data, loading } = useOnChainOrder(order.escrowPda);
-
-  /* залишок у людському вигляді */
   const remaining = useMemo(() => {
-    if (loading || !data) return order.amount;               // fallback
+    if (loading || !data) return order.amount;            
     const dec = getDecimals(order.tokenMint);
     return Number(data.remainingAmount) / 10 ** dec;
   }, [loading, data, order]);
+
+if (!order.escrowPda) {
+  const token = TOKENS.find(t => t.mint === order.tokenMint)!;
+  const isBuy = true;
+  const buyer = order.buyerFiat ?? 'Unknown';
+
+  return (
+    <div className={`p2p-order-card ${isBuy ? 'buy' : 'sell'}`}>
+      <div className="order-top">
+        <div className="order-title">
+          <span className="side-label">{isBuy ? 'Buy' : 'Sell'}</span>
+          <span className="amount">
+            {order.amount} {token.name}
+          </span>
+        </div>
+
+        <div className="order-price">
+          Price: {order.price || '-'} {order.fiatCode}
+        </div>
+      </div>
+
+      <div className="order-footer">
+        <span className="seller">From: {buyer}</span>
+        {onSwap && (
+          <button
+            className="swap-btn"
+            onClick={() => onSwap(order, Number(order.amount))}
+          >
+            Lock&nbsp;{token.name}
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
 
   const token   = TOKENS.find(t => t.mint === order.tokenMint)!;
   const isBuy   = order.offerSide === 1;

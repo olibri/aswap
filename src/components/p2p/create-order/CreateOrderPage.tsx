@@ -89,7 +89,7 @@ const CreateOrderPage: React.FC = () => {
       const priceF = parseFloat(price);
       const minF    = parseFloat(minFiat);
       const maxF    = parseFloat(maxFiat);
-
+    
       // Validate common fields
       if (!amountF || amountF <= 0) {
         alert('Enter a valid crypto amount');
@@ -107,13 +107,36 @@ const CreateOrderPage: React.FC = () => {
         setIsSubmitting(false);
         return;
       }
-      console.log(`Fiat range: ${minF} - ${maxF}`);
+      const dealIdBn = new BN(Date.now());
+
+  /* ───────────────────────────── BUY-order ───────────────────────────── */
+      if (type === 'buy') {
+        const res = await fetch(`${API_PREFIX}/platform/create-buyer-createOrder`, {
+          method : 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body   : JSON.stringify({
+            orderId        : Number(dealIdBn.toString()),
+            orderType      : 1,                 
+            tokenMint      : tok.mint.toBase58(),
+            price          : priceF * 100, // price in cents
+            minFiatAmount  : minF,
+            maxFiatAmount  : maxF,
+            status         : EscrowStatus.PendingOnChain,
+            buyer  : program.provider.publicKey!.toBase58(),
+            fiatCode       : fiat,
+            amount         : amountF * 1000000,
+          }),
+        });
+        if (!res.ok) throw new Error(await res.text());
+        navigate('/');
+        return;
+      }
+
 
       // On-chain uses exact amount and price
       const amountBn = new BN(Math.round(amountF * 10 ** tok.decimals));
       const priceBn  = new BN(Math.round(priceF * 100));
       const wallet = program.provider.publicKey!;
-      const dealIdBn = new BN(Date.now());
 
       const [escrowPda] = pdaEscrowOffer(wallet, dealIdBn);
       const [vaultAuthPda]  = pdaVaultAuthority(escrowPda);

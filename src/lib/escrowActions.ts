@@ -1,6 +1,6 @@
 // src/lib/escrowActions.ts
 import * as anchor from '@coral-xyz/anchor';
-import { Connection, PublicKey, Transaction } from '@solana/web3.js';
+import { Connection, PublicKey, SystemProgram, Transaction } from '@solana/web3.js';
 import { useWallet } from '@solana/wallet-adapter-react';
 import {useEscrowProgram} from '../hook/useEscrowProgram';
 import { EscrowOrderDto } from '../types/offers';
@@ -45,6 +45,7 @@ export function useEscrowActions() {
       cancelFill:  async () => Promise.resolve(),
       buyerSign:   async () => Promise.resolve(),
       sellerSign:  async () => Promise.resolve(),
+      lockEscrow:  async () => Promise.resolve(),
     };
 
     
@@ -172,6 +173,11 @@ async function buyerSign(order: EscrowOrderDto, onTx?: (sig: string)=>void) {
         new PublicKey(order.sellerCrypto),
         dealIdBn,
       )[0];
+    const isOffer = escrowOffer.equals(new PublicKey(order.escrowPda));
+
+    if(isOffer){
+    console.log('\x1b[33m%s\x1b[0m', '⚠️ ⚠️ ⚠️ ⚠️');
+    console.log('\x1b[36m%s\x1b[0m', '>>>>>> CALL buyerSignOffer <<<<<');
     const sig = await program!.methods
       .buyerSignOffer(dealIdBn)
       .accounts({
@@ -185,7 +191,26 @@ async function buyerSign(order: EscrowOrderDto, onTx?: (sig: string)=>void) {
       .rpc();
       console.log('✅ buyerSigned tx:', sig);
       if (onTx) onTx(sig);
-
+    }
+    else{
+      // Print colored warning and info messages in the console
+      console.log('\x1b[33m%s\x1b[0m', '⚠️ ⚠️ ⚠️ ⚠️');
+      console.log('\x1b[36m%s\x1b[0m', '>>>>>> CALL buyerSign <<<<<');
+     
+    const sig = await program!.methods
+    .buyerSign(dealIdBn)
+    .accounts({
+      escrowAccount:     new PublicKey(order.escrowPda), // seed "escrow"
+      vaultAccount:      new PublicKey(vault),
+      vaultAuthority:    new PublicKey(vaultAuth),       // обчислено вище
+      buyerTokenAccount: new PublicKey(buyerAta),
+      buyer:             publicKey!,
+      tokenProgram:      TOKEN_PROGRAM_ID,
+    })
+    .rpc();
+    console.log('✅ buyerSign tx:', sig);
+    if (onTx) onTx(sig);
+    }
   }
   
 }
@@ -198,20 +223,28 @@ async function buyerSign(order: EscrowOrderDto, onTx?: (sig: string)=>void) {
       );
     
     const dealId = new BN(order.dealId);
+
+    const offerPda = pdaEscrowOffer(
+      new PublicKey(order.sellerCrypto),
+      dealId,
+    )[0];
+    const isOffer = offerPda.equals(new PublicKey(order.escrowPda));
+
+
     console.log('--->', dealId);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let escrowPk: any;
     if (!order.vault || !order.vaultAuth || !order.buyerAta) {
-        // const escrowPk = pdaEscrowOffer(
-        //   new PublicKey(order.sellerCrypto),
-        //   dealId,
-        // )[0];
 
-      escrowPk = order.isPartial
+
+      // escrowPk = order.isPartial
+      //         ? new PublicKey(order.fillPda!)                                           // ← Fill-PDA
+      //         : pdaEscrowOffer(new PublicKey(order.sellerCrypto), dealId)[0];           
+
+ escrowPk = order.isPartial
               ? new PublicKey(order.fillPda!)                                           // ← Fill-PDA
-              : pdaEscrowOffer(new PublicKey(order.sellerCrypto), dealId)[0];           
+              : new PublicKey(order.escrowPda);         
 
-        // читаємо акаунт оферу
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const acc: any = await (program!.account as any).escrowAccount.fetch(escrowPk);
 
@@ -249,23 +282,23 @@ async function buyerSign(order: EscrowOrderDto, onTx?: (sig: string)=>void) {
         await program!.provider.connection.confirmTransaction(sig2, 'confirmed');
 
 
-        const [vaultBal, buyerBal] = await Promise.all([
-          program!.provider.connection.getTokenAccountBalance(new PublicKey(order.vault)),
-          program!.provider.connection.getTokenAccountBalance(new PublicKey(order.buyerAta)),
-        ]);
+        // const [vaultBal, buyerBal] = await Promise.all([
+        //   program!.provider.connection.getTokenAccountBalance(new PublicKey(order.vault)),
+        //   program!.provider.connection.getTokenAccountBalance(new PublicKey(order.buyerAta)),
+        // ]);
 
-        console.table({
-          seller: order.sellerCrypto,
-          buyer : publicKey!.toBase58(),
-          vault : vaultBal.value.uiAmountString,
-          buyerATA: buyerBal.value.uiAmountString,
-        });
+        // console.table({
+        //   seller: order.sellerCrypto,
+        //   buyer : publicKey!.toBase58(),
+        //   vault : vaultBal.value.uiAmountString,
+        //   buyerATA: buyerBal.value.uiAmountString,
+        // });
 
         console.log('[after sellerSignPartial]');
-        console.table({
-          vault:  vaultBal.value.uiAmountString,
-          buyer:  buyerBal.value.uiAmountString,
-        });
+        // console.table({
+        //   vault:  vaultBal.value.uiAmountString,
+        //   buyer:  buyerBal.value.uiAmountString,
+        // });
         console.log('✅ b tx:', sig2);
 
     } else {
@@ -284,7 +317,9 @@ async function buyerSign(order: EscrowOrderDto, onTx?: (sig: string)=>void) {
         seller:           publicKey!.toBase58(),
         tokenProgram:     TOKEN_PROGRAM_ID.toBase58(),
       });
+      if(isOffer){
 
+      
       const sig2 = await program!.methods
         .sellerSignOffer(dealId)
         .accounts({
@@ -297,6 +332,49 @@ async function buyerSign(order: EscrowOrderDto, onTx?: (sig: string)=>void) {
         })
         .rpc();
         console.log('✅ b tx:', sig2);
+      }
+      else{
+        console.log('sellerSign accounts: <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<', {
+          escrowAccount:    new PublicKey(order.escrowPda).toBase58(),
+          vaultAccount:     new PublicKey(order.vault).toBase58(),
+          vaultAuthority:   new PublicKey(order.vaultAuth).toBase58(),
+          buyerTokenAccount:new PublicKey(order.buyerAta).toBase58(),
+          seller:           publicKey!.toBase58(),
+          tokenProgram:     TOKEN_PROGRAM_ID.toBase58(),
+        });
+        // ───── SHOW CURRENT ON-CHAIN ESCROW STATE ─────
+          try {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const esc = await (program!.account as any).escrowAccount.fetch(
+              new PublicKey(order.escrowPda),
+            );
+            console.table({
+              label        : 'on-chain before sellerSign',
+              escrowPda    : order.escrowPda,
+              buyer        : esc.buyer.toBase58(),
+              seller       : esc.seller.toBase58(),
+              buyerSigned  : esc.buyerSigned,
+              sellerSigned : esc.sellerSigned,
+              isCanceled   : esc.isCanceled,
+            });
+          } catch (e) {
+            console.warn('fetch escrowAccount error', e);
+          }
+          // ───────────────────────────────────────────────
+
+        const sig2 = await program!.methods
+        .sellerSign(dealId)
+        .accounts({
+          escrowAccount:    new PublicKey(order.escrowPda),
+          vaultAccount:     new PublicKey(order.vault),
+          vaultAuthority:   new PublicKey(order.vaultAuth),
+          buyerTokenAccount:new PublicKey(order.buyerAta),
+          seller:           publicKey!,
+          tokenProgram:     TOKEN_PROGRAM_ID,
+        })
+        .rpc();
+      console.log('✅ sellerSign tx:', sig2);
+      }
     }
   }
 
@@ -435,6 +513,65 @@ async function buyerSign(order: EscrowOrderDto, onTx?: (sig: string)=>void) {
       .rpc();
   }
 
-  return { claimWhole, claimPartial, cancelClaim, cancelFill, buyerSign, sellerSign};
+async function lockEscrow(
+  order: EscrowOrderDto,        
+  amountUi: number,             
+) {
+  if (!program || !publicKey) throw new Error('Wallet not connected');
 
+  const tokMint = new PublicKey(order.tokenMint);          
+  const amountBn = new anchor.BN(amountUi * 10 ** 6);      
+  const priceBn  = new anchor.BN(Math.round(order.price * 100));
+
+  const seller   = publicKey;
+  const buyer    = new PublicKey(order.buyerFiat!);
+
+  const dealIdBn = new BN(order.dealId);
+
+  const [escrowPda] = PublicKey.findProgramAddressSync(
+    [Buffer.from('escrow'), seller.toBuffer(), buyer.toBuffer(), dealIdBn.toArrayLike(Buffer,'le',8)],
+    program.programId,
+  );
+  const [vaultAuth] = PublicKey.findProgramAddressSync(
+    [Buffer.from('vault_authority'), escrowPda.toBuffer()],
+    program.programId,
+  );
+  const sellerAta = await getAssociatedTokenAddress(tokMint, seller);
+  const vaultAta  = await getAssociatedTokenAddress(tokMint, vaultAuth, true);
+
+  const tx = new Transaction();
+  const info = await program.provider.connection.getAccountInfo(vaultAta);
+  if (!info) tx.add(createAssociatedTokenAccountInstruction(
+    seller, vaultAta, vaultAuth, tokMint));
+
+  const ix = await program.methods
+    .initializeEscrow(amountBn, tokMint, order.fiatCode, priceBn, dealIdBn)
+    .accounts({
+      escrowAccount    : escrowPda,
+      sellerTokenAccount: sellerAta,
+      vaultAccount     : vaultAta,
+      seller           : seller,
+      buyer            : buyer,
+      tokenProgram     : TOKEN_PROGRAM_ID,
+      systemProgram    : SystemProgram.programId,
+    })
+    .instruction();
+
+  tx.add(ix);
+
+  const sig = await program.provider.sendAndConfirm!(tx, []);
+  await program.provider.connection.confirmTransaction(sig, 'finalized');
+
+  Object.assign(order, {
+    escrowPda : escrowPda.toBase58(),
+    sellerCrypto: seller.toBase58(),
+    amount   : amountUi,
+    vault    : vaultAta.toBase58(),
+    vaultAuth: vaultAuth.toBase58(),
+    offerSide: 0,                  
+  });
+}
+
+
+  return { claimWhole, claimPartial, cancelClaim, cancelFill, buyerSign, sellerSign, lockEscrow};
 }

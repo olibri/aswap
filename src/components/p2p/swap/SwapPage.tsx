@@ -17,6 +17,7 @@ import { EscrowOrderDto } from '../../../types/offers';
 import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { EscrowStatus } from '../../../lib/escrowStatus';
 import { useEscrowWatcher } from '../../../hook/useEscrowWatcher';
+import { useWallet } from '@solana/wallet-adapter-react';
 const API_PREFIX = import.meta.env.VITE_API_PREFIX ?? '/api';
 
 const dummyReviews = [
@@ -27,7 +28,8 @@ const dummyReviews = [
 const renderStars = (count: number) => '★'.repeat(count) + '☆'.repeat(5 - count);
 
 const SwapPage: React.FC = () => {
-  const { cancelClaim, cancelFill, buyerSign } = useEscrowActions();
+  const { cancelClaim, cancelFill, buyerSign, sellerSign } = useEscrowActions();
+  const { publicKey } = useWallet(); 
   const [, setRefresh] = useState(0);          
   const [signing, setSigning] = useState(false);
   const navigate = useNavigate();
@@ -48,6 +50,8 @@ const SwapPage: React.FC = () => {
   fillPda?: string;
   parentOffer?: string;
 });
+
+  const isSeller = publicKey?.toBase58() === order.sellerCrypto;
   const isPartial = Boolean(order?.isPartial);
   const escrowPk = order.isPartial ? order.fillPda ?? order.escrowPda : order.escrowPda;      
   const [showDone, setShowDone] = useState(false);
@@ -157,6 +161,17 @@ const SwapPage: React.FC = () => {
                  try {
                     
                    setSigning(true);
+
+                    if (isSeller) {
+                      await sellerSign(order);
+                      order.sellerSigned = true;
+                    } else {
+                      await buyerSign(order, ()=> {
+                        setRefresh(r => r + 1);
+                      }); 
+                      order.buyerSigned = true;
+                    }
+
                    await buyerSign(order, ()=> {
                     setRefresh(r => r + 1);
                    });        

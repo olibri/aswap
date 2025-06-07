@@ -35,7 +35,7 @@ export function useEscrowWatcher({
     const handle = (buf: Buffer | null) => {
     const acc = safeParse(buf);
     if (acc) {
-        console.table({ buyerSigned: acc.buyerSigned, sellerSigned: acc.sellerSigned });
+        // console.table({ buyerSigned: acc.buyerSigned, sellerSigned: acc.sellerSigned });
     }
     if (acc && acc.buyerSigned && acc.sellerSigned) {
         setIsReleased(true);

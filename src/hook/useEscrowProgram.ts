@@ -6,7 +6,7 @@ import idl from '../idl/ddd.json';
 import { Idl } from '@coral-xyz/anchor';
 export default idl as Idl;
 export const PROGRAM_ID = new PublicKey(
-  'BJzJ6hQBpVxoPDUanXRJ1TwyBSN8oiBTnQYL92aEcS1X'
+  '8ZaCWdMtJFsN18Fsg4GWANpprFh7HegNNm3D6eybFnV1'
 );
 
 export function useEscrowProgram() {
