@@ -12,7 +12,7 @@ import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
 import SwapChart from "./components/main-page/swap-chart";
 import Footer from "./components/footer/footer";
 import { ThemeProvider, createTheme } from '@mui/material';
-import MyOrders from "./components/MyOrders/MyOrders";
+// import MyOrders from "./components/MyOrders/MyOrders";
 
 
 function App() {
@@ -70,7 +70,7 @@ function App() {
                       <Route path="/market-p2p-orders" element={<P2PMarket />} />
                       <Route path="/swap/:id" element={<SwapPage />} />
                       <Route path="/create-order" element={<CreateOrderPage />} />
-                      <Route path="/my-orders" element={<MyOrders />} />
+                      {/* <Route path="/my-orders" element={<MyOrders />} /> */}
                     </Routes>
                 </main>
                 <Footer/>
