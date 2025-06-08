@@ -10,7 +10,7 @@ import {
   TOKEN_PROGRAM_ID,
 } from '@solana/spl-token';
 import { Buffer } from 'buffer';
-import { pdaEscrowOffer } from '../solana/constants';   
+import { pdaEscrow, pdaEscrowOffer } from '../solana/constants';   
 import { BN } from '@coral-xyz/anchor';
 
 function pdaOffer(seller: PublicKey, dealId: anchor.BN, programId: PublicKey) {
@@ -46,6 +46,7 @@ export function useEscrowActions() {
       buyerSign:   async () => Promise.resolve(),
       sellerSign:  async () => Promise.resolve(),
       lockEscrow:  async () => Promise.resolve(),
+      cancelEscrow:async () => Promise.resolve(),
     };
 
     
@@ -572,6 +573,53 @@ async function lockEscrow(
   });
 }
 
+  async function cancelEscrow(order: EscrowOrderDto) {
+    if (!program || !publicKey) throw new Error('Wallet not connected');
 
-  return { claimWhole, claimPartial, cancelClaim, cancelFill, buyerSign, sellerSign, lockEscrow};
+    /* ▸ 1. зʼясовуємо PDAs & ATA */
+    const dealIdBn = new anchor.BN(order.dealId);
+    const sellerPk = publicKey;                     // ви – підписант-seller
+    const buyerPk  = new PublicKey(order.buyerFiat!); // buyer – підписант buyer
+    const escrowPkTuple = pdaEscrow(                     // seed = ["escrow", seller, buyer, deal_id]
+      sellerPk,
+      buyerPk,
+      dealIdBn,
+      program.programId,
+    );
+    const escrowPk = escrowPkTuple[0];
+
+    // витягаємо акаунт, щоб мати vault-account
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const escAcc: any = await (program.account as any).escrowAccount.fetch(escrowPk);
+    const vaultPk = escAcc.vaultAccount as PublicKey;
+
+    const [vaultAuthPk] = PublicKey.findProgramAddressSync(
+      [Buffer.from('vault_authority'), escrowPk.toBuffer()],
+      program.programId,
+    );
+
+    const sellerAta = await ensureAta(
+      escAcc.tokenMint,
+      sellerPk,
+      program.provider.connection,
+      sellerPk,
+    );
+
+    /* ▸ 2. викликаємо інструкцію */
+    const sig = await program.methods
+      .cancelEscrow(dealIdBn)
+      .accounts({
+        escrowAccount:      escrowPk,
+        vaultAccount:       vaultPk,
+        vaultAuthority:     vaultAuthPk,
+        sellerTokenAccount: sellerAta,
+        seller:             sellerPk,
+        tokenProgram:       TOKEN_PROGRAM_ID,
+      })
+      .rpc();
+
+    console.log('✅ cancelEscrow tx:', sig);
+  }
+
+  return { claimWhole, claimPartial, cancelClaim, cancelFill, buyerSign, sellerSign, lockEscrow, cancelEscrow };
 }

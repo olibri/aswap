@@ -28,7 +28,7 @@ const dummyReviews = [
 const renderStars = (count: number) => '★'.repeat(count) + '☆'.repeat(5 - count);
 
 const SwapPage: React.FC = () => {
-  const { cancelClaim, cancelFill, buyerSign, sellerSign } = useEscrowActions();
+  const { cancelClaim, cancelFill, buyerSign, sellerSign, cancelEscrow } = useEscrowActions();
   const { publicKey } = useWallet(); 
   const [, setRefresh] = useState(0);          
   const [signing, setSigning] = useState(false);
@@ -55,7 +55,6 @@ const SwapPage: React.FC = () => {
   const isPartial = Boolean(order?.isPartial);
   const escrowPk = order.isPartial ? order.fillPda ?? order.escrowPda : order.escrowPda;      
   const [showDone, setShowDone] = useState(false);
-
   useEscrowWatcher({
       escrowPk,
       onReleased: () => setShowDone(true),
@@ -142,8 +141,13 @@ const SwapPage: React.FC = () => {
                   onClick={async () => {
                     if (!order) return;
                     try {
-                      if (isPartial) await cancelFill(order);
-                      else await cancelClaim(order);
+                      if (isSeller) {
+                              console.log('cancel offer');
+                                await cancelEscrow(order);
+                              } else {
+                                if (isPartial) await cancelFill(order);
+                                else           await cancelClaim(order);
+                              }
                       navigate('/market-p2p-orders');
                     } catch (err) {
                       console.error(err);
@@ -171,10 +175,7 @@ const SwapPage: React.FC = () => {
                       }); 
                       order.buyerSigned = true;
                     }
-
-                   await buyerSign(order, ()=> {
-                    setRefresh(r => r + 1);
-                   });        
+        
                   const backendRes = await fetch(`${API_PREFIX}/platform/update-offers`, {
                           method: 'PUT',
                           headers: { 'Content-Type': 'application/json' },

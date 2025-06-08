@@ -1,5 +1,5 @@
 {
-  "address": "8ZaCWdMtJFsN18Fsg4GWANpprFh7HegNNm3D6eybFnV1",
+  "address": "4XWhHXw15XFHu4LviKKgqvz8DqR9jFb8t8uTwTWALUkv",
   "metadata": {
     "name": "ddd",
     "version": "0.1.0",
@@ -431,6 +431,114 @@
       "args": [
         {
           "name": "_deal_id",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "cancel_escrow",
+      "discriminator": [
+        156,
+        203,
+        54,
+        179,
+        38,
+        72,
+        33,
+        21
+      ],
+      "accounts": [
+        {
+          "name": "escrow_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "escrow_account.seller",
+                "account": "EscrowAccount"
+              },
+              {
+                "kind": "account",
+                "path": "escrow_account.buyer",
+                "account": "EscrowAccount"
+              },
+              {
+                "kind": "arg",
+                "path": "deal_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault_account",
+          "writable": true,
+          "relations": [
+            "escrow_account"
+          ]
+        },
+        {
+          "name": "vault_authority",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "escrow_account"
+              }
+            ]
+          }
+        },
+        {
+          "name": "seller_token_account",
+          "writable": true
+        },
+        {
+          "name": "seller",
+          "docs": [
+            "CHECK"
+          ],
+          "signer": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": [
+        {
+          "name": "deal_id",
           "type": "u64"
         }
       ]
@@ -1360,6 +1468,19 @@
       ]
     },
     {
+      "name": "EscrowCanceled",
+      "discriminator": [
+        240,
+        46,
+        49,
+        120,
+        133,
+        138,
+        122,
+        55
+      ]
+    },
+    {
       "name": "EscrowInitialized",
       "discriminator": [
         222,
@@ -1635,6 +1756,26 @@
           {
             "name": "deal_id",
             "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "EscrowCanceled",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "escrow",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "seller",
+            "type": "pubkey"
           }
         ]
       }
