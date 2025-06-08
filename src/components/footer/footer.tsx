@@ -10,9 +10,9 @@ const coins = [
 ];
 
 const socials = [
-  { alt: 'Telegram', href: 'https://t.me/your_project', src: '/icons/telegram.svg' },
-  { alt: 'Twitter',  href: 'https://twitter.com/your_project', src: '/icons/twitter.svg' },
-  { alt: 'Email',    href: 'mailto:support@yourproject.com',   src: '/icons/email.svg'   },
+  { alt: 'Telegram', href: 'https://t.me/aswap2p', src: '/icons/telegram.svg' },
+  { alt: 'Twitter',  href: 'https://x.com/aswap_p2p', src: '/icons/twitter.svg' },
+  { alt: 'Email',    href: 'aswap.web@proton.me',   src: '/icons/email.svg'   },
 ];
 
 export default function Footer() {

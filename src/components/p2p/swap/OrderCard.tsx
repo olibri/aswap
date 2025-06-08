@@ -9,7 +9,8 @@ const TOKENS = [
 
 const getDecimals = (mint: string) =>
   TOKENS.find(t => t.mint === mint)?.decimals ?? 9;
-
+const shortPk = (pk?: string) =>
+  pk && pk.length > 8 ? `${pk.slice(0, 4)}…${pk.slice(-4)}` : pk ?? 'Unknown';
 interface Props {
   order:  EscrowOrderDto;
   onSwap?: (o: EscrowOrderDto, remaining: number) => void;
@@ -26,8 +27,7 @@ export const OrderCard: React.FC<Props> = ({ order, onSwap }) => {
 if (!order.escrowPda) {
   const token = TOKENS.find(t => t.mint === order.tokenMint)!;
   const isBuy = true;
-  const buyer = order.buyerFiat ?? 'Unknown';
-
+  const buyer = shortPk(order.buyerFiat!);
   return (
     <div className={`p2p-order-card ${isBuy ? 'buy' : 'sell'}`}>
       <div className="order-top">
@@ -61,10 +61,7 @@ if (!order.escrowPda) {
 
   const token   = TOKENS.find(t => t.mint === order.tokenMint)!;
   const isBuy   = order.offerSide === 1;
-  const seller  = order.sellerCrypto
-    ? `${order.sellerCrypto.slice(0, 4)}…${order.sellerCrypto.slice(-4)}`
-    : 'Unknown';
-
+  const seller = shortPk(order.sellerCrypto);         
   return (
     <div className={`p2p-order-card ${isBuy ? 'buy' : 'sell'}`}>
       <div className="order-top">
