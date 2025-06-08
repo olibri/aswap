@@ -62,17 +62,19 @@ function App() {
         <WalletProvider  wallets={wallets} autoConnect>
           <WalletModalProvider>
             <div className="App">
-              <Header onToggleTheme={toggleTheme} currentTheme={theme} />
-                <main className="AppMain">
-                  <Routes>
-                    <Route path="/" element={<SwapChart />} />
-                    <Route path="/market-p2p-orders" element={<P2PMarket />} />
-                    <Route path="/swap/:id" element={<SwapPage />} />
-                    <Route path="/create-order" element={<CreateOrderPage />} />
-                    <Route path="/my-orders" element={<MyOrders />} />
-                  </Routes>
-              </main>
-              <Footer/>
+               <div className="AppLayout">
+                <Header onToggleTheme={toggleTheme} currentTheme={theme} />
+                  <main className="AppMain">
+                    <Routes>
+                      <Route path="/" element={<SwapChart />} />
+                      <Route path="/market-p2p-orders" element={<P2PMarket />} />
+                      <Route path="/swap/:id" element={<SwapPage />} />
+                      <Route path="/create-order" element={<CreateOrderPage />} />
+                      <Route path="/my-orders" element={<MyOrders />} />
+                    </Routes>
+                </main>
+                <Footer/>
+              </div>
             </div>
           </WalletModalProvider>
         </WalletProvider >
