@@ -146,7 +146,10 @@ const P2PMarket: React.FC = () => {
   const handleLock = async () => {
     if (!modal) return;
     const amt = Number(customAmt);
-    if (isNaN(amt) || amt <= 0) return;
+    if (isNaN(amt) || amt <= 0  || amt > modal.amount) {
+      alert(`Max available: ${modal.amount}`);
+      return;
+    }
 
     try {
       await lockEscrow(modal, amt);
@@ -252,11 +255,16 @@ const P2PMarket: React.FC = () => {
                   placeholder="Amount to lock"
                   value={customAmt}
                   onChange={e => setCustomAmt(e.currentTarget.value)}
+                  max={modal.amount}          
                   className="modal-input"
                 />
                 <button
                   className="modal-btn-claim"
-                  disabled={!customAmt}
+                  disabled={
+                    !customAmt ||
+                    Number(customAmt) <= 0 ||
+                    Number(customAmt) > modal.amount
+                  }
                   onClick={handleLock}
                 >
                   Lock&nbsp;USDC

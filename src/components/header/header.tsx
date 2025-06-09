@@ -36,9 +36,7 @@ const Header: React.FC<Props> = ({ onToggleTheme, currentTheme }) => {
         <a href="#" onClick={() => setOpen(false)}>
           Offline
         </a>
-        <a href="#" onClick={() => setOpen(false)}>
-          Swap
-        </a>
+      
         <a href="/my-orders" onClick={() => setOpen(false)}>
           My orders
         </a>
@@ -64,9 +62,7 @@ const Header: React.FC<Props> = ({ onToggleTheme, currentTheme }) => {
         <a href="#" onClick={() => setOpen(false)}>
           Offline
         </a>
-        <a href="#" onClick={() => setOpen(false)}>
-          Swap
-        </a>
+      
         <a href="/my-orders" onClick={() => setOpen(false)}>
           My orders
         </a>

@@ -18,6 +18,7 @@ import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { EscrowStatus } from '../../../lib/escrowStatus';
 import { useEscrowWatcher } from '../../../hook/useEscrowWatcher';
 import { useWallet } from '@solana/wallet-adapter-react';
+import { useChat } from '../../../hooks/useChat';
 const API_PREFIX = import.meta.env.VITE_API_PREFIX ?? '/api';
 
 const dummyReviews = [
@@ -35,21 +36,20 @@ const SwapPage: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const [timeLeft, setTimeLeft] = useState(15 * 60);
-  const [messages, setMessages] = useState([
-    { from: '0xBob', text: 'Привіт! Готовий до оплати?' },
-    { from: 'you', text: 'Так, перевіряю суму.' },
-  ]);
   const [newMsg, setNewMsg] = useState('');
   const chatRef = useRef<HTMLDivElement>(null);
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
   const location = useLocation();
   const order = location.state as (EscrowOrderDto & {
-  isPartial: boolean;
-  fillNonce?: number;
-  fillPda?: string;
-  parentOffer?: string;
-});
+      isPartial: boolean;
+      fillNonce?: number;
+      fillPda?: string;
+      parentOffer?: string;
+  });
+  const roomId = order.dealId;
+  const accountId = publicKey?.toBase58() ?? '';
+  const { messages, sendMessage } = useChat(Number(roomId), accountId);
 
   const isSeller = publicKey?.toBase58() === order.sellerCrypto;
   const isPartial = Boolean(order?.isPartial);
@@ -75,12 +75,11 @@ const SwapPage: React.FC = () => {
 
   const fmt = (s: number) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`;
 
-  const sendMessage = () => {
-    if (!newMsg.trim()) return;
-    setMessages((m) => [...m, { from: 'you', text: newMsg }]);
-    setNewMsg('');
-  };
-
+  const onSend = () => {
+      if (!newMsg.trim()) return;
+          sendMessage(newMsg);
+          setNewMsg('');
+        };
   const shortId = id?.split('-').pop()?.slice(-6);
 
   return (
@@ -215,27 +214,42 @@ const SwapPage: React.FC = () => {
               '&::-webkit-scrollbar-track': { backgroundColor: isDark ? '#000000' : '#eee' },
               scrollBehavior: 'smooth',
             }}
-          >
-            <Stack spacing={1}>
-              {messages.map((m, i) => (
-                <Slide key={i} direction={m.from === 'you' ? 'left' : 'right'} in mountOnEnter unmountOnExit appear>
+                    >
+          <Stack spacing={1}>
+            {messages.map((m, i) => {
+              const isMe = m.accountId === accountId;           
+              return (
+                <Slide
+                  key={i}
+                  direction={isMe ? 'left' : 'right'}
+                  in
+                  mountOnEnter
+                  unmountOnExit
+                  appear
+                >
                   <Box
-                    alignSelf={m.from === 'you' ? 'flex-end' : 'flex-start'}
+                    alignSelf={isMe ? 'flex-end' : 'flex-start'}
                     sx={{
                       maxWidth: '70%',
                       p: 2,
                       borderRadius: 2,
-                      bgcolor: m.from === 'you' ? '#F3EF52' : theme.palette.background.paper,
-                      color: m.from === 'you' ? '#27292F' : theme.palette.text.primary,
+                      bgcolor: isMe ? '#F3EF52' : theme.palette.background.paper,
+                      color:   isMe ? '#27292F' : theme.palette.text.primary,
                       wordBreak: 'break-word',
                     }}
                   >
-                    <Typography fontWeight={600}>{m.from}</Typography>
-                    <Typography>{m.text}</Typography>
+                    {/* Показуємо “you” для своїх або скорочений гаманець для чужих */}
+                    <Typography fontWeight={600}>
+                      {isMe ? 'you' : `${m.accountId.slice(0, 6)}…`}
+                    </Typography>
+
+                    <Typography>{m.content}</Typography>
                   </Box>
                 </Slide>
-              ))}
-            </Stack>
+              );
+            })}
+          </Stack>
+
           </Box>
           <Box display="flex" gap={2}>
             <TextField
@@ -244,9 +258,9 @@ const SwapPage: React.FC = () => {
               placeholder="Type message..."
               value={newMsg}
               onChange={(e) => setNewMsg(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
+              onKeyDown={(e) => e.key === 'Enter' && onSend()}
             />
-            <Button variant="contained" sx={{ bgcolor: '#F3EF52', color: '#27292F', '&:hover': { bgcolor: '#e0dc48' } }} onClick={sendMessage}>Send</Button>
+            <Button variant="contained" sx={{ bgcolor: '#F3EF52', color: '#27292F', '&:hover': { bgcolor: '#e0dc48' } }} onClick={onSend}>Send</Button>
           </Box>
         </Paper>
       </Box>

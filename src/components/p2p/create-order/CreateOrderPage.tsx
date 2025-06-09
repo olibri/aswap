@@ -66,7 +66,7 @@ const CreateOrderPage: React.FC = () => {
   // Ranges
   const [minFiat, setMinFiat] = useState('');     // user's accepted fiat range: min
   const [maxFiat, setMaxFiat] = useState('');     // user's accepted fiat range: max
-
+  const [maxFiatTouched, setMaxFiatTouched] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
   const program = useEscrowProgram();
@@ -74,6 +74,15 @@ const CreateOrderPage: React.FC = () => {
   const handleStep = (step: StepIndex) => () => setActiveStep(step);
   const handleNext = () => setActiveStep(prev => (prev + 1) as StepIndex);
   const handleBack = () => setActiveStep(prev => (prev - 1) as StepIndex);
+
+      const recomputeMaxFiat = (amt: string, pr: string) => {
+          const a = parseFloat(amt);
+          const p = parseFloat(pr);
+          if (!maxFiatTouched && a > 0 && p > 0) {
+            // toFixed(2) – щоб одразу було 2 знаки після коми, або Math.round() – як вам треба
+            setMaxFiat((a * p).toFixed(2));
+          }
+        };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -181,6 +190,7 @@ const CreateOrderPage: React.FC = () => {
           },
           'finalized'
       );
+
       async function checkBackendForOrder(orderId: number) {
         const res = await fetch(`${API_PREFIX}/platform/check-order-status/${orderId}`);
         if (res.status === 404) return false;
@@ -285,7 +295,11 @@ const CreateOrderPage: React.FC = () => {
             <TextField
               label={`Amount (${TOKENS.find(t => t.value === token)?.name})`}
               value={amount}
-              onChange={e => setAmount(e.target.value)}
+              onChange={e => {
+                  const v = e.target.value;
+                  setAmount(v);
+                  recomputeMaxFiat(v, price);
+                }}
               fullWidth
               InputLabelProps={{ style: { color: '#fff' } }}
               InputProps={{ style: { color: '#fff' } }}
@@ -293,7 +307,11 @@ const CreateOrderPage: React.FC = () => {
             <TextField
               label={`Price (${fiat})`}
               value={price}
-              onChange={e => setPrice(e.target.value)}
+              onChange={e => {
+                  const v = e.target.value;
+                  setPrice(v);
+                  recomputeMaxFiat(amount, v);
+                }}
               fullWidth
               InputLabelProps={{ style: { color: '#fff' } }}
               InputProps={{ style: { color: '#fff' } }}
@@ -310,7 +328,14 @@ const CreateOrderPage: React.FC = () => {
             <TextField
               label={`Max Fiat (${fiat})`}
               value={maxFiat}
-              onChange={e => setMaxFiat(e.target.value)}
+              onChange={e => {
+                  setMaxFiat(e.target.value);
+                  setMaxFiatTouched(true);      // ← користувач редагує вручну
+                }}
+                onBlur={() => {
+                  // якщо юзер стер усе поле – знову дозволяємо авто-заповнення
+                  if (maxFiat.trim() === '') setMaxFiatTouched(false);
+                }}
               fullWidth
               InputLabelProps={{ style: { color: '#fff' } }}
               InputProps={{ style: { color: '#fff' } }}
