@@ -24,7 +24,7 @@ export function useChat(dealId: number | undefined,
   const fetchMessages = async (signal?: AbortSignal) => {
     if (!dealId) return;
     try {
-      const res = await fetch(`${API}/rooms/${dealId}/messages`, { signal });
+      const res = await fetch(`${API}/chat/rooms/${dealId}/messages`, { signal });
       if (!res.ok) throw new Error(res.statusText);
 
       const data = (await res.json()) as MessageDto[];
@@ -57,7 +57,7 @@ export function useChat(dealId: number | undefined,
       setMessages((cur) => [...cur, optimistic]);
 
       try {
-        const res = await fetch(`${API}/add-messages`, {
+        const res = await fetch(`${API}/chat/add-messages`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(optimistic),
