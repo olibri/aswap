@@ -14,7 +14,7 @@ type Timer = ReturnType<typeof setInterval>;
  */
 export function useChat(dealId: number | undefined,
                         accountId: string | undefined,
-                        pollMs = 5_000) {
+                        pollMs = 2_000) {
   const [messages, setMessages] = useState<MessageDto[]>([]);
   const [loading,  setLoading]  = useState(true);
   const [error,    setError]    = useState<string | null>(null);

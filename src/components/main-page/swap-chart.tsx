@@ -1,9 +1,10 @@
 import './swap-chart.css';
 import FloatIcon from "./floatIcon";
-
+import { useLatestDeals } from '../../hooks/useLatestDeals';
+import { Link } from 'react-router-dom'; 
 
 const SwapChart: React.FC = () => {
-
+const { deals, loading } = useLatestDeals(5);                
   return (
     <div className="home">
 
@@ -11,7 +12,6 @@ const SwapChart: React.FC = () => {
       <section className="hero">
       <div className="hero-glow" />
         <h1>P2P DEX made simple</h1>
-        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
         <div className="hero-actions">
           <a href="/create-order" className="btn accent">Create offer</a>
           <a href="/market-p2p-orders" className="btn ghost">Browse market</a>
@@ -28,28 +28,28 @@ const SwapChart: React.FC = () => {
 
       
       </section>
+{/* HOW IT WORKS */}
+<section className="hiw">
+  <h2>How it works</h2>
+  <div className="hiw-grid">
+    <article>
+      <span className="index">01</span>
+      <h3>Lock funds</h3>
+      <p>The buyer locks USDC or SOL into a secure on-chain escrow account.</p>
+    </article>
+    <article>
+      <span className="index">02</span>
+      <h3>Counter‑sign</h3>
+      <p>The seller verifies the trade and signs to confirm the agreement.</p>
+    </article>
+    <article>
+      <span className="index">03</span>
+      <h3>Release escrow</h3>
+      <p>Funds are automatically released once both sides fulfill their part.</p>
+    </article>
+  </div>
+</section>
 
-      {/* HOW IT WORKS */}
-      <section className="hiw">
-        <h2>How it works</h2>
-        <div className="hiw-grid">
-          <article>
-            <span className="index">01</span>
-            <h3>Lock funds</h3>
-            <p>Lorem ipsum dolor sit amet consectetur.</p>
-          </article>
-          <article>
-            <span className="index">02</span>
-            <h3>Counter‑sign</h3>
-            <p>Fusce dapibus, tellus ac cursus commodo.</p>
-          </article>
-          <article>
-            <span className="index">03</span>
-            <h3>Release escrow</h3>
-            <p>Donec ullamcorper nulla non metus auctor.</p>
-          </article>
-        </div>
-      </section>
 
       {/* QUICK STATS / CTA */}
       <section className="stats">
@@ -64,6 +64,37 @@ const SwapChart: React.FC = () => {
         <div className="stat-card">
           <h3>0</h3>
           <p>Disputes outstanding</p>
+        </div>
+      </section>
+
+<section className="latest">
+        <h2>Latest deals</h2>
+
+        {loading ? (
+          <p>Loading…</p>
+        ) : deals.length === 0 ? (
+          <p>No recent activity.</p>
+        ) : (
+          <ul className="latest-list">
+            {deals.map((d) => (
+              <li key={d.dealId}>
+                <Link to={`/swap/${d.dealId}`}>
+                  <span className="pair">{d.fiatCode} / {d.tokenMint}</span>
+                  <span className="amount">
+                    {Number(d.amount) } {d.tokenMint}
+                  </span>
+                  <span className="price">
+                    @ ${Number(d.price) / 100}
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+        <div style={{ textAlign: 'center', marginTop: '1.4rem' }}>
+          <Link to="/market-p2p-orders" className="btn ghost small">
+            View full market →
+          </Link>
         </div>
       </section>
 
