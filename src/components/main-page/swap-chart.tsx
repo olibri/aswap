@@ -2,9 +2,37 @@ import './swap-chart.css';
 import FloatIcon from "./floatIcon";
 import { useLatestDeals } from '../../hooks/useLatestDeals';
 import { Link } from 'react-router-dom'; 
-
+import {
+  Table,
+  TableHead,
+  TableBody,
+  TableRow,
+  TableCell,
+  Paper,
+  Typography,
+  CircularProgress,
+  Box,
+  TableContainer,
+  Link as MuiLink,
+  Button,
+} from '@mui/material';
 const SwapChart: React.FC = () => {
-const { deals, loading } = useLatestDeals(5);                
+  const fakeDeals = [
+  { dealId: 'abc123', fiatCode: 'USD', tokenMint: 'USDC', amount: 150, price: 100 },
+  { dealId: 'xyz456', fiatCode: 'EUR', tokenMint: 'SOL', amount: 0.42, price: 16423 },
+  { dealId: 'def789', fiatCode: 'UAH', tokenMint: 'USDT', amount: 300, price: 99 },
+  { dealId: 'qwe321', fiatCode: 'USD', tokenMint: 'SOL', amount: 1.25, price: 16250 },
+  { dealId: 'lmn654', fiatCode: 'GBP', tokenMint: 'USDC', amount: 200, price: 101 },
+];
+const tokenLogos: Record<string, string> = {
+  USDC: 'icons/usdc.svg',
+  SOL: 'icons/solana.svg',
+  USDT: 'icons/usdt.svg',
+};
+const deals = fakeDeals;
+const loading = false;
+
+// const { deals, loading } = useLatestDeals(5);                
   return (
     <div className="home">
 
@@ -67,36 +95,107 @@ const { deals, loading } = useLatestDeals(5);
         </div>
       </section>
 
-<section className="latest">
-        <h2>Latest deals</h2>
+ <section className="latest">
+      <h2>
+        Latest deals
+      </h2>
+     
+      {loading ? (
+        <Box textAlign="center" py={4}>
+          <CircularProgress />
+        </Box>
+      ) : deals.length === 0 ? (
+        <Typography color="textSecondary" textAlign="center" py={4}>
+          No recent activity.
+        </Typography>
+      ) : (
+        <TableContainer
+          component={Paper}
+          sx={{
+            borderRadius: 3,
+            overflow: 'hidden',
+            backgroundColor: '#1c1c1f',
+          }}
+        >
+          <Table>
+            <TableHead sx={{ backgroundColor: '#2a2a2e' }}>
+              <TableRow>
+                <TableCell>Pair</TableCell>
+                <TableCell>Amount</TableCell>
+                <TableCell>Price</TableCell>
+                <TableCell>Action</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {deals.map((d) => (
+                <TableRow
+                  key={d.dealId}
+                  hover
+                  sx={{
+                    '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.05)' },
+                    transition: '0.3s',
+                  }}
+                >
+                  <TableCell>
+                    <Box display="flex" alignItems="center" gap={1}>
+                      <img
+                        src={tokenLogos[d.tokenMint] || '/tokens/default.svg'}
+                        alt={d.tokenMint}
+                        width={20}
+                        height={20}
+                      />
+                      <span>{d.fiatCode} / {d.tokenMint}</span>
+                    </Box>
+                  </TableCell>
+                  <TableCell>
+                    {Number(d.amount).toLocaleString()} {d.tokenMint}
+                  </TableCell>
+                  <TableCell
+                    sx={{
+                      color: Number(d.price) >= 100 ? '#5EFFA0' : '#FF7C7C',
+                      fontWeight: 500,
+                    }}
+                  >
+                    ${ (Number(d.price) / 100).toFixed(2) }
+                  </TableCell>
+                  <TableCell>
+                    <MuiLink
+                      component={Link}
+                      to={`/swap/${d.dealId}`}
+                      underline="none"
+                      sx={{ color: '#F3EF52', fontWeight: 500 }}
+                    >
+                      View →
+                    </MuiLink>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      )}
 
-        {loading ? (
-          <p>Loading…</p>
-        ) : deals.length === 0 ? (
-          <p>No recent activity.</p>
-        ) : (
-          <ul className="latest-list">
-            {deals.map((d) => (
-              <li key={d.dealId}>
-                <Link to={`/swap/${d.dealId}`}>
-                  <span className="pair">{d.fiatCode} / {d.tokenMint}</span>
-                  <span className="amount">
-                    {Number(d.amount) } {d.tokenMint}
-                  </span>
-                  <span className="price">
-                    @ ${Number(d.price) / 100}
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
-        <div style={{ textAlign: 'center', marginTop: '1.4rem' }}>
-          <Link to="/market-p2p-orders" className="btn ghost small">
-            View full market →
-          </Link>
-        </div>
-      </section>
+      <Box textAlign="center" mt={3}>
+        <Button
+          component={Link}
+          to="/market-p2p-orders"
+          variant="outlined"
+          sx={{
+            borderRadius: 2,
+            borderColor: '#F3EF52',
+            color: '#F3EF52',
+            px: 3,
+            fontWeight: 600,
+            '&:hover': {
+              backgroundColor: 'rgba(243, 239, 82, 0.1)',
+              borderColor: '#F3EF52',
+            },
+          }}
+        >
+          View full market →
+        </Button>
+      </Box>
+    </section>
 
     </div>
   );
