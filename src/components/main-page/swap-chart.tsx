@@ -1,6 +1,5 @@
 import './swap-chart.css';
 import FloatIcon from "./floatIcon";
-import { useLatestDeals } from '../../hooks/useLatestDeals';
 import { Link } from 'react-router-dom'; 
 import {
   Table,
