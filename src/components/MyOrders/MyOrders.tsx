@@ -10,15 +10,18 @@ import {
   CircularProgress,
   Stack,
 } from '@mui/material';
-import { useState } from 'react';
-
+import { useEffect, useRef, useState } from 'react';
+import { callAdmin } from '../../lib/callAdmin';
+import { useSnackbar } from 'notistack';
 import { DealChatDialog } from '../../components/DealChatDialog';  // ← додали
+import { useWallet } from '@solana/wallet-adapter-react';
+import { useOrdersBadge } from '../../context/OrdersBadgeContext';
 
 const MyOrders: React.FC = () => {
   /* дані по ордерах */
   const { loading, orders, forceRefresh } = useUnsignedOrders();       // ви – seller
   const { loading: loadB, orders: buyerOrders, refresh } = useBuyerPendingOrders(); // ви – buyer
-
+  const { enqueueSnackbar } = useSnackbar();
   const { sellerSign, buyerSign } = useEscrowActions();
 
   /* --- СТАН для діалогу чату ----------------------------------------- */
@@ -27,6 +30,19 @@ const MyOrders: React.FC = () => {
   const closeChat = () => setChatDeal(null);
   /* -------------------------------------------------------------------- */
 
+  const { bump, clear } = useOrdersBadge();
+  useEffect(() => {
+    clear();
+  }, []);
+  const savedIdsRef = useRef<Set<number>>(new Set());
+    useEffect(() => {
+      const allIds = [...orders, ...buyerOrders].map(o => o.dealId);
+      const hasNew = allIds.some(id => !savedIdsRef.current.has(id));
+      if (hasNew) bump();
+      savedIdsRef.current = new Set(allIds);
+    }, [orders, buyerOrders]);
+
+  const { publicKey } = useWallet();
   if (loading || loadB) return <CircularProgress />;
 
   return (
@@ -62,6 +78,24 @@ const MyOrders: React.FC = () => {
                 {/* ← КНОПКА ЧАТУ */}
                 <Button variant="outlined" onClick={() => openChat(o.dealId)}>
                   Chat
+                </Button>
+                <Button
+                  variant="outlined"
+                  color="warning"
+                  onClick={async () => {
+                    try {
+                      await callAdmin({
+                        orderId: o.dealId,
+                        buyerWallet: o.buyerCrypto,
+                        sellerWallet: o.sellerCrypto,
+                      });
+                      enqueueSnackbar('Admin called', { variant: 'success' });
+                    } catch {
+                      enqueueSnackbar('Error sending request', { variant: 'error' });
+                    }
+                  }}
+                >
+                  Call admin
                 </Button>
               </Stack>
             </Paper>
@@ -100,6 +134,25 @@ const MyOrders: React.FC = () => {
                 {/* ← КНОПКА ЧАТУ */}
                 <Button variant="outlined" onClick={() => openChat(o.dealId)}>
                   Chat
+                </Button>
+                 <Button
+                  variant="outlined"
+                  color="warning"
+                  onClick={async () => {
+                    try {
+                      await callAdmin({
+                        orderId: o.dealId,
+                        buyerWallet: publicKey?.toBase58() || '',
+                        sellerWallet: o.sellerCrypto,
+                      });
+                      enqueueSnackbar('Admin called', { variant: 'success' });
+                    } catch(er) {
+                      console.error('Error calling admin:', er);
+                      enqueueSnackbar('Error sending request', { variant: 'error' });
+                    }
+                  }}
+                >
+                  Call admin
                 </Button>
               </Stack>
             </Paper>

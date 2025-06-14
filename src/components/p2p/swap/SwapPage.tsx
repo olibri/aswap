@@ -19,6 +19,8 @@ import { EscrowStatus } from '../../../lib/escrowStatus';
 import { useEscrowWatcher } from '../../../hook/useEscrowWatcher';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useChat } from '../../../hooks/useChat';
+import { callAdmin } from '../../../lib/callAdmin';
+import { useSnackbar } from 'notistack';
 const API_PREFIX = import.meta.env.VITE_API_PREFIX ?? '/api';
 
 const dummyReviews = [
@@ -50,7 +52,7 @@ const SwapPage: React.FC = () => {
   const roomId = order.dealId;
   const accountId = publicKey?.toBase58() ?? '';
   const { messages, sendMessage } = useChat(Number(roomId), accountId);
-
+  const { enqueueSnackbar } = useSnackbar();
   const isSeller = publicKey?.toBase58() === order.sellerCrypto;
   const isPartial = Boolean(order?.isPartial);
   const escrowPk = order.isPartial ? order.fillPda ?? order.escrowPda : order.escrowPda;      
@@ -197,6 +199,26 @@ const SwapPage: React.FC = () => {
                {signing ? 'Signing…' : 'Paid'}
               </Button>
 
+          <Button
+            variant="outlined"
+            color="warning"
+            sx={{ ml: 2 }}
+            onClick={async () => {
+              try {
+                await callAdmin({
+                  orderId: order.dealId,
+                  buyerWallet: order.buyerFiat!,
+                  sellerWallet: order.sellerCrypto,
+                });
+                enqueueSnackbar('Admin has been notified', { variant: 'success' });
+              } catch (e) {
+                console.error(e);
+                enqueueSnackbar('Failed to call admin', { variant: 'error' });
+              }
+            }}
+          >
+            Call admin
+          </Button>
             </Box>
           </Box>
           <Divider sx={{ mb: 2 }} />

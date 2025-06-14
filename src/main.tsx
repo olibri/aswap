@@ -5,11 +5,14 @@ import { BrowserRouter } from 'react-router-dom'
 
 import * as buffer from "buffer";
 import 'process';                
+import { OrdersBadgeProvider } from './context/OrdersBadgeContext.tsx';
 
 window.Buffer = buffer.Buffer
 
 createRoot(document.getElementById('root')!).render(
-  <BrowserRouter> {}
-    <App />
+  <BrowserRouter>
+    <OrdersBadgeProvider>
+      <App />
+    </OrdersBadgeProvider>
   </BrowserRouter>,
 )
