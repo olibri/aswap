@@ -16,6 +16,7 @@ import { useSnackbar } from 'notistack';
 import { DealChatDialog } from '../../components/DealChatDialog';  // ← додали
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useOrdersBadge } from '../../context/OrdersBadgeContext';
+import { notifyTg } from '../../lib/notifyTg';
 
 const MyOrders: React.FC = () => {
   /* дані по ордерах */
@@ -125,6 +126,14 @@ const MyOrders: React.FC = () => {
                   variant="contained"
                   onClick={async () => {
                     await buyerSign(o);
+
+                     notifyTg({
+                        dealId:       Number(o.dealId),
+                        buyerWallet:  o.buyerFiat!,
+                        sellerWallet: o.sellerCrypto,
+                        orderUrl:     window.location.href,
+                        receiver:     "Buyer"
+                      });
                     await refresh();
                   }}
                 >

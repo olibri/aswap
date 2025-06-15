@@ -172,13 +172,7 @@ const SwapPage: React.FC = () => {
                       await sellerSign(order);
                       order.sellerSigned = true;
 
-                      notifyTg({
-                        dealId:       Number(order.dealId),
-                        buyerWallet:  order.buyerFiat!,
-                        sellerWallet: order.sellerCrypto,
-                        orderUrl:     window.location.href,
-                        receiver:     "Buyer"
-                      });
+                     
                     } else {
                       await buyerSign(order, ()=> {
                         setRefresh(r => r + 1);
