@@ -89,6 +89,8 @@ const MyOrders: React.FC = () => {
                         orderId: o.dealId,
                         buyerWallet: o.buyerCrypto,
                         sellerWallet: o.sellerCrypto,
+                        messageType: 'AdminNotification',
+                        notificationReceiver: 'Admin',
                       });
                       enqueueSnackbar('Admin called', { variant: 'success' });
                     } catch {
@@ -153,6 +155,8 @@ const MyOrders: React.FC = () => {
                         orderId: o.dealId,
                         buyerWallet: publicKey?.toBase58() || '',
                         sellerWallet: o.sellerCrypto,
+                        messageType: 'AdminNotification',
+                        notificationReceiver: 'Admin',
                       });
                       enqueueSnackbar('Admin called', { variant: 'success' });
                     } catch(er) {

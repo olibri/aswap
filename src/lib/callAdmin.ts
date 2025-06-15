@@ -4,6 +4,9 @@ export async function callAdmin(dto: {
   orderId: number | string;
   buyerWallet: string;
   sellerWallet: string;
+  messageType:        "AdminNotification"
+  notificationReceiver?: "Admin";
+
 }) {
   const res = await fetch(`${API_PREFIX}/platform/call-tg-bot`, {
     method: 'POST',

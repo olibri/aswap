@@ -169,11 +169,14 @@ const SwapPage: React.FC = () => {
                    setSigning(true);
 
                     if (isSeller) {
+                      console.log('seller signingZZZZZZ');
                       await sellerSign(order);
                       order.sellerSigned = true;
 
                      
                     } else {
+                      console.log('buyer signingZZZZZZ');
+
                       await buyerSign(order, ()=> {
                         setRefresh(r => r + 1);
                       }); 
@@ -220,6 +223,8 @@ const SwapPage: React.FC = () => {
                   orderId: order.dealId,
                   buyerWallet: order.buyerFiat!,
                   sellerWallet: order.sellerCrypto,
+                  messageType:        "AdminNotification",
+                  notificationReceiver: "Admin"
                 });
                 enqueueSnackbar('Admin has been notified', { variant: 'success' });
               } catch (e) {
