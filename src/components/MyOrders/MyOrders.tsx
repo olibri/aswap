@@ -129,7 +129,7 @@ const MyOrders: React.FC = () => {
 
                      notifyTg({
                         dealId:       Number(o.dealId),
-                        buyerWallet:  o.buyerFiat!,
+                        buyerWallet:  publicKey!.toBase58(),
                         sellerWallet: o.sellerCrypto,
                         orderUrl:     window.location.href,
                         receiver:     "Buyer"
