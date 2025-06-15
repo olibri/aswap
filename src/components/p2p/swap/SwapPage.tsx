@@ -21,6 +21,7 @@ import { useWallet } from '@solana/wallet-adapter-react';
 import { useChat } from '../../../hooks/useChat';
 import { callAdmin } from '../../../lib/callAdmin';
 import { useSnackbar } from 'notistack';
+import { notifyTg } from '../../../lib/notifyTg';
 const API_PREFIX = import.meta.env.VITE_API_PREFIX ?? '/api';
 
 const dummyReviews = [
@@ -170,11 +171,27 @@ const SwapPage: React.FC = () => {
                     if (isSeller) {
                       await sellerSign(order);
                       order.sellerSigned = true;
+
+                      notifyTg({
+                        dealId:       Number(order.dealId),
+                        buyerWallet:  order.buyerFiat!,
+                        sellerWallet: order.sellerCrypto,
+                        orderUrl:     window.location.href,
+                        receiver:     "Buyer"
+                      });
                     } else {
                       await buyerSign(order, ()=> {
                         setRefresh(r => r + 1);
                       }); 
                       order.buyerSigned = true;
+
+                      notifyTg({
+                        dealId:       Number(order.dealId),
+                        buyerWallet:  order.buyerFiat!,
+                        sellerWallet: order.sellerCrypto,
+                        orderUrl:     window.location.href,
+                        receiver:     "Seller"
+                      });
                     }
         
                   const backendRes = await fetch(`${API_PREFIX}/platform/update-offers`, {
